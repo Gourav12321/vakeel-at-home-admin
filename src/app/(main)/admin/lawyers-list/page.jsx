@@ -12,7 +12,7 @@ import { useEffect, useState } from "react";
 import { useSearchParams, usePathname, useRouter } from "next/navigation";
 import { Button } from "antd";
 
-const QueryManagement = () => {
+const Lawyers = () => {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -27,16 +27,17 @@ const QueryManagement = () => {
 
   const fetchData = () => {
     getQuery({
-      url: `${apiUrls?.getAllCompanies}?page=${page}&limit=${limit}`,
+      url: `${apiUrls?.lawyers.getAllLawyers}?page=${page}&limit=${limit}`,
       onSuccess: (response) => {
-        const dataList = Array.isArray(response?.data) ? response.data : [];
-        setTotalDocuments(response.totalDocuments);
+        const dataList = Array.isArray(response?.data?.lawyers)
+          ? response?.data?.lawyers
+          : [];
+        setTotalDocuments(response.data.pagination.totalLawyers);
 
         const mappedData = dataList.map((item) => ({
-          companyName: item?.companyName,
-          companyType: item?.companyType || "N/A",
-          companyPaidUpCapital: item?.companyPaidUpCapital || "N/A",
-          companyEmailId: item?.companyEmailId || "N/A",
+          fullName: item?.fullName || "N/A",
+          mobileNumber: item?.mobileNumber || "N/A",
+          email: item?.email || "N/A",
           _id: item?._id,
         }));
 
@@ -50,23 +51,18 @@ const QueryManagement = () => {
 
   const columns = [
     {
-      Header: "Company Name",
-      accessor: "companyName",
+      Header: "Full Name",
+      accessor: "fullName",
       width: 200,
     },
     {
-      Header: "Company Type",
-      accessor: "companyType",
+      Header: "Mobile Number",
+      accessor: "mobileNumber",
       width: 150,
     },
     {
-      Header: "Paid Up Capital",
-      accessor: "companyPaidUpCapital",
-      width: 200,
-    },
-    {
-      Header: "Office Email Id",
-      accessor: "companyEmailId",
+      Header: "Email ID",
+      accessor: "email",
       width: 200,
     },
   ];
@@ -108,7 +104,7 @@ const QueryManagement = () => {
             showDate={true}
             showActions={true}
             onView={(row) =>
-              `/vendor/rfq-requests/rfq-details/${row._id}/?page=${page}&limit=${limit}`
+              `/admin/lawyers-list/${row._id}/?page=${page}&limit=${limit}`
             }
             entryText={`Total Requests: ${totalDocuments}`}
             currentPage={page}
@@ -124,4 +120,4 @@ const QueryManagement = () => {
   );
 };
 
-export default QueryManagement;
+export default Lawyers;

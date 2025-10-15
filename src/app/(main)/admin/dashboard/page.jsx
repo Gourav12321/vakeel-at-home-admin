@@ -1,6 +1,7 @@
 "use client";
 
 import Title from "@/components/Title/Title";
+import Loader from "@/components/Loader/Loader";
 import useGetQuery from "@/hooks/getQuery.hook";
 
 import { apiUrls } from "@/apis";
@@ -14,7 +15,6 @@ import {
   Typography,
   Space,
   Tag,
-  Spin,
 } from "antd";
 import {
   UserOutlined,
@@ -49,7 +49,7 @@ const Dashboard = () => {
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
-        <Spin size="large" />
+        <Loader />
       </div>
     );
   }

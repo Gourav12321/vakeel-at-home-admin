@@ -40,11 +40,11 @@ export const adminSidebarItems = [
     link: "/admin/dashboard",
     icon: AppstoreOutlined,
   },
-  // {
-  //   name: "Business Management",
-  //   link: "/admin/business-management",
-  //   icon: ContactsOutlined,
-  // },
+  {
+    name: "Lawyers",
+    link: "/admin/lawyers-list",
+    icon: UserOutlined,
+  },
   // {
   //   name: "Property Management",
   //   link: "/admin/property-management",
