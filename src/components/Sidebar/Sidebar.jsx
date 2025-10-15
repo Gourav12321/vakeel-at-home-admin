@@ -18,7 +18,6 @@ import {
   CaretDownOutlined,
   CaretRightOutlined,
 } from "@ant-design/icons";
-import { apiUrls } from "@/apis";
 
 export default function Sidebar({
   sidebarOpen,
@@ -119,8 +118,8 @@ export default function Sidebar({
             </button>
 
             <Image
-              src={images.workerProfile}
-              alt="TUKANG.HUB"
+              src={images.vakeelLogo}
+              alt="Vakeel At Home"
               width={40}
               height={40}
               onClick={() => router.push(getDashboardLink())}

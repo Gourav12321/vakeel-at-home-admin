@@ -31,7 +31,7 @@ import {
   SearchOutlined,
 } from "@ant-design/icons";
 
-export const sidebarHeading = "TUKANG.HUB";
+export const sidebarHeading = "VAKEEL AT HOME";
 
 // Admin Sidebar Items
 export const adminSidebarItems = [
