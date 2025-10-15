@@ -38,6 +38,9 @@ const Lawyers = () => {
           fullName: item?.fullName || "N/A",
           mobileNumber: item?.mobileNumber || "N/A",
           email: item?.email || "N/A",
+          experience: item?.experience || 0,
+          date: moment(item?.createdAt).format("DD-MM-YYYY") || "N/A",
+          updatedAt: item?.updatedAt,
           _id: item?._id,
         }));
 
@@ -53,18 +56,29 @@ const Lawyers = () => {
     {
       Header: "Full Name",
       accessor: "fullName",
-      width: 200,
+      width: 180,
     },
     {
       Header: "Mobile Number",
       accessor: "mobileNumber",
-      width: 150,
+      width: 140,
     },
     {
       Header: "Email ID",
       accessor: "email",
-      width: 200,
+      width: 180,
     },
+    {
+      Header: "Experience",
+      accessor: "experience",
+      width: 100,
+      Cell: ({ value }) => <span className="font-medium">{value} years</span>,
+    },
+    // {
+    //   Header: "Created",
+    //   accessor: "date",
+    //   width: 100,
+    // },
   ];
 
   useEffect(() => {
@@ -89,7 +103,7 @@ const Lawyers = () => {
 
   return (
     <>
-      <Title title={"Query Management"} />
+      <Title title={"Lawyers List"} />
 
       {loading ? (
         <div className="flex justify-center items-center h-64">
