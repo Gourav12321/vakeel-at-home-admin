@@ -23,6 +23,7 @@ const Lawyers = () => {
 
   const [tableData, setTableData] = useState([]);
   const [totalDocuments, setTotalDocuments] = useState(0);
+  const [togglingId, setTogglingId] = useState(null);
 
   const page = parseInt(searchParams.get("page") || "1", 10);
   const limit = parseInt(searchParams.get("limit") || "10", 10);
@@ -47,7 +48,6 @@ const Lawyers = () => {
           _id: item?._id,
         }));
 
-        console.log("Mapped Data:", mappedData);
         setTableData(mappedData);
       },
       onFail: (err) => {
@@ -57,9 +57,9 @@ const Lawyers = () => {
   };
 
   const handleToggleStatus = (lawyerId, currentStatus) => {
+    setTogglingId(lawyerId);
     putQuery({
-      url: `${apiUrls.lawyers.toggleStatus}/${lawyerId}`,
-      putData: {},
+      url: `${apiUrls.auth.toggleStatus}/${lawyerId}`,
       onSuccess: (response) => {
         toast.success("Status updated successfully");
         setTableData((prevData) =>
@@ -69,10 +69,12 @@ const Lawyers = () => {
               : item
           )
         );
+        setTogglingId(null);
       },
       onFail: (err) => {
         console.log("Toggle failed:", err);
         toast.error("Failed to update status");
+        setTogglingId(null);
       },
     });
   };
@@ -102,16 +104,15 @@ const Lawyers = () => {
       Header: "Update Profile",
       accessor: "isProfileUpdated",
       width: 160,
-      Cell: ({ value, row }) => {
-        console.log("Profile Status Cell - value:", value, "row:", row);
+      Cell: (value, record) => {
         return (
           <Select
             value={value ? "updated" : "not_updated"}
             onChange={(newValue) => {
-              const newStatus = newValue === "updated";
-              handleToggleStatus(row._id, value);
+              handleToggleStatus(record._id, value);
             }}
-            loading={toggleLoading}
+            loading={togglingId === record._id}
+            disabled={togglingId === record._id}
             style={{ width: "100%", minWidth: "140px" }}
             size="small"
             className="profile-status-select"

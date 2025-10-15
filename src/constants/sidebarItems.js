@@ -199,7 +199,6 @@ export const buyerSidebarItems = [
 ];
 
 export const getSidebarItems = (userType) => {
-  console.log("userType", userType);
   switch (userType) {
     case "admin":
       return adminSidebarItems;

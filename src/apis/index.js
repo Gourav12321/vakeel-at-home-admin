@@ -4,10 +4,10 @@ export const apiUrls = {
   auth: {
     login: "/auth",
     statistics: "/auth/statistics",
+    toggleStatus: "/auth/toggle-profile-status",
   },
   lawyers: {
     getAllLawyers: "/lawyers",
     getLawyerById: "/lawyers",
-    toggleStatus: "/toggle-profile-status",
   },
 };
