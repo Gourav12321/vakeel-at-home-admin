@@ -1,0 +1,215 @@
+import {
+  AppstoreOutlined,
+  ContactsOutlined,
+  ToolOutlined,
+  HomeOutlined,
+  ProjectOutlined,
+  CrownOutlined,
+  ShopOutlined,
+  FileTextOutlined,
+  FileSearchOutlined,
+  ProfileOutlined,
+  FileDoneOutlined,
+  QuestionCircleOutlined,
+  UserOutlined,
+  SettingOutlined,
+  BarChartOutlined,
+  TeamOutlined,
+  DollarOutlined,
+  FileProtectOutlined,
+  AuditOutlined,
+  BankOutlined,
+  CustomerServiceOutlined,
+  SafetyOutlined,
+  BookOutlined,
+  CalendarOutlined,
+  MessageOutlined,
+  StarOutlined,
+  HeartOutlined,
+  ShoppingCartOutlined,
+  HistoryOutlined,
+  SearchOutlined,
+} from "@ant-design/icons";
+
+export const sidebarHeading = "TUKANG.HUB";
+
+// Admin Sidebar Items
+export const adminSidebarItems = [
+  {
+    name: "Dashboard",
+    link: "/admin/dashboard",
+    icon: AppstoreOutlined,
+  },
+  // {
+  //   name: "Business Management",
+  //   link: "/admin/business-management",
+  //   icon: ContactsOutlined,
+  // },
+  // {
+  //   name: "Property Management",
+  //   link: "/admin/property-management",
+  //   icon: QuestionCircleOutlined,
+  // },
+  // {
+  //   name: "Subscription Management",
+  //   link: "/admin/subscription-management",
+  //   icon: ProjectOutlined,
+  //   children: [
+  //     {
+  //       name: "Subscriptions",
+  //       link: "/admin/subscription-management/subscriptions",
+  //     },
+  //     {
+  //       name: "User Subscriptions",
+  //       link: "/admin/subscription-management/user-subscriptions",
+  //     },
+  //   ],
+  // },
+  // {
+  //   name: "Service Management",
+  //   link: "/admin/service-management",
+  //   icon: ToolOutlined,
+  // },
+  // {
+  //   name: "BQ Management",
+  //   link: "/admin/bq-management",
+  //   icon: HomeOutlined,
+  // },
+  // {
+  //   name: "Reviews Management",
+  //   link: "/admin/reviews-management",
+  //   icon: ProjectOutlined,
+  // },
+  // {
+  //   name: "Customer Management",
+  //   link: "/admin/customer-management",
+  //   icon: CrownOutlined,
+  // },
+];
+
+// Vendor Sidebar Items
+export const vendorSidebarItems = [
+  {
+    name: "Dashboard",
+    link: "/vendor/dashboard",
+    icon: AppstoreOutlined,
+  },
+  {
+    name: "Businesses",
+    link: "/vendor/businesses",
+    icon: ShopOutlined,
+    children: [
+      { name: "Business 1", link: "/vendor/businesses/businesses-details" },
+      { name: "Add Business", link: "/vendor/businesses/add-businesses" },
+    ],
+  },
+  {
+    name: "My RFQ Request",
+    link: "/vendor/rfq-requests",
+    icon: FileTextOutlined,
+  },
+  {
+    name: "View Quotations",
+    link: "/vendor/view-quotations",
+    icon: FileSearchOutlined,
+  },
+  {
+    name: "Projects",
+    link: "/vendor/projects",
+    icon: ProjectOutlined,
+  },
+  {
+    name: "Reviews",
+    link: "/vendor/reviews",
+    icon: ProjectOutlined,
+  },
+];
+
+// Buyer / User Sidebar Items
+export const buyerSidebarItems = [
+  // {
+  //   name: "Dashboard",
+  //   link: "/user/dashboard",
+  //   icon: AppstoreOutlined,
+  // },
+  {
+    name: "Directory",
+    link: "/user/directory",
+    icon: ContactsOutlined,
+  },
+  {
+    name: "My Properties",
+    link: "/user/my-properties",
+    icon: HomeOutlined,
+    children: [
+      { name: "All Properties", link: "/user/my-properties/all-properties" },
+      { name: "Add Property", link: "/user/my-properties/add-property" },
+      {
+        name: "Add Organization",
+        link: "/user/my-properties/add-organization",
+      },
+    ],
+  },
+  {
+    name: "Projects",
+    link: "/user/projects",
+    icon: ProjectOutlined,
+    children: [
+      { name: "All Projects", link: "/user/projects" },
+      { name: "Create Project", link: "/user/projects/create-project" },
+    ],
+  },
+  {
+    name: "My Subscriptions",
+    link: "/user/my-subscriptions",
+    icon: CrownOutlined,
+    children: [
+      { name: "All Subscriptions", link: "/user/my-subscriptions" },
+      {
+        name: "Subscription Details",
+        link: "/user/my-subscriptions/subscriptions",
+      },
+    ],
+  },
+  {
+    name: "Businesses",
+    link: "/user/businesses",
+    icon: ShopOutlined,
+  },
+  {
+    name: "View Quotations",
+    link: "/user/view-quotations",
+    icon: FileSearchOutlined,
+  },
+  // {
+  //   name: "Wishlist",
+  //   link: "/user/wishlist",
+  //   icon: HeartOutlined,
+  // },
+  // {
+  //   name: "Purchase History",
+  //   link: "/user/purchase-history",
+  //   icon: HistoryOutlined,
+  // },
+  // {
+  //   name: "Saved Searches",
+  //   link: "/user/saved-searches",
+  //   icon: SearchOutlined,
+  // },
+];
+
+export const getSidebarItems = (userType) => {
+  console.log("userType", userType);
+  switch (userType) {
+    case "admin":
+      return adminSidebarItems;
+    case "vendor":
+      return vendorSidebarItems;
+    case "customer":
+      return buyerSidebarItems;
+    default:
+      return adminSidebarItems;
+  }
+};
+
+export const sidebarNavItems = adminSidebarItems;
