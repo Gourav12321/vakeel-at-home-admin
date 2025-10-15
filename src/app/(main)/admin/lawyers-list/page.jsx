@@ -4,13 +4,14 @@ import moment from "moment";
 import toast from "react-hot-toast";
 import Title from "@/components/Title/Title";
 import useGetQuery from "@/hooks/getQuery.hook";
+import usePutQuery from "@/hooks/putQuery.hook";
 import Loader from "@/components/Loader/Loader";
 import EnhancedTable from "@/components/Table/EnhancedTable";
 
 import { apiUrls } from "@/apis";
 import { useEffect, useState } from "react";
 import { useSearchParams, usePathname, useRouter } from "next/navigation";
-import { Button } from "antd";
+import { Button, Switch } from "antd";
 
 const Lawyers = () => {
   const router = useRouter();
@@ -18,6 +19,7 @@ const Lawyers = () => {
   const searchParams = useSearchParams();
 
   const { getQuery, loading } = useGetQuery();
+  const { putQuery, loading: toggleLoading } = usePutQuery();
 
   const [tableData, setTableData] = useState([]);
   const [totalDocuments, setTotalDocuments] = useState(0);
@@ -29,9 +31,11 @@ const Lawyers = () => {
     getQuery({
       url: `${apiUrls?.lawyers.getAllLawyers}?page=${page}&limit=${limit}`,
       onSuccess: (response) => {
+        console.log("API Response:", response);
         const dataList = Array.isArray(response?.data?.lawyers)
           ? response?.data?.lawyers
           : [];
+        console.log("Data List:", dataList);
         setTotalDocuments(response.data.pagination.totalLawyers);
 
         const mappedData = dataList.map((item) => ({
@@ -41,13 +45,37 @@ const Lawyers = () => {
           experience: item?.experience || 0,
           date: moment(item?.createdAt).format("DD-MM-YYYY") || "N/A",
           updatedAt: item?.updatedAt,
+          isProfileUpdated: item?.isProfileUpdated === true,
           _id: item?._id,
         }));
 
+        console.log("Mapped Data:", mappedData);
         setTableData(mappedData);
       },
       onFail: (err) => {
         console.log(err);
+      },
+    });
+  };
+
+  const handleToggleStatus = (lawyerId, currentStatus) => {
+    putQuery({
+      url: `${apiUrls.lawyers.toggleStatus}/${lawyerId}`,
+      putData: {},
+      onSuccess: (response) => {
+        toast.success("Status updated successfully");
+        // Update the local state
+        setTableData((prevData) =>
+          prevData.map((item) =>
+            item._id === lawyerId
+              ? { ...item, isProfileUpdated: !currentStatus }
+              : item
+          )
+        );
+      },
+      onFail: (err) => {
+        console.log("Toggle failed:", err);
+        toast.error("Failed to update status");
       },
     });
   };
@@ -74,11 +102,25 @@ const Lawyers = () => {
       width: 100,
       Cell: ({ value }) => <span className="font-medium">{value} years</span>,
     },
-    // {
-    //   Header: "Created",
-    //   accessor: "date",
-    //   width: 100,
-    // },
+    {
+      Header: "Profile Status",
+      accessor: "isProfileUpdated",
+      width: 120,
+      Cell: ({ value, row }) => (
+        <Switch
+          checked={value}
+          loading={toggleLoading}
+          onChange={() => handleToggleStatus(row._id, value)}
+          checkedChildren="Active"
+          unCheckedChildren="Inactive"
+        />
+      ),
+    },
+    {
+      Header: "Created",
+      accessor: "date",
+      width: 100,
+    },
   ];
 
   useEffect(() => {

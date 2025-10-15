@@ -23,9 +23,6 @@ importers:
       axios-retry:
         specifier: ^4.5.0
         version: 4.5.0(axios@1.12.2)
-      dayjs:
-        specifier: ^1.11.18
-        version: 1.11.18
       embla-carousel-react:
         specifier: ^8.6.0
         version: 8.6.0(react@19.1.0)
