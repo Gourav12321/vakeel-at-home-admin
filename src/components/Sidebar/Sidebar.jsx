@@ -120,8 +120,8 @@ export default function Sidebar({
             <Image
               src={images.vakeelLogo}
               alt="Vakeel At Home"
-              width={40}
-              height={40}
+              width={120}
+              height={120}
               onClick={() => router.push(getDashboardLink())}
               className="cursor-pointer"
             />

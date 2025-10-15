@@ -10,8 +10,7 @@ const Header = () => {
   const router = useRouter();
   const { user, isAuthenticated } = useAuth();
 
-  const handleLoginClick = () => router.push("/login");
-  const handleSignupClick = () => router.push("/signup/business");
+  const handleLoginClick = () => router.push("/");
 
   return (
     <div className="w-full mx-auto flex flex-col lg:flex-row items-start lg:items-center justify-between gap-3 lg:gap-6">
@@ -42,12 +41,6 @@ const Header = () => {
               onClick={handleLoginClick}
             >
               Login
-            </button>
-            <button
-              className="white-button text-sm px-3 py-1 sm:px-4 sm:py-2"
-              onClick={handleSignupClick}
-            >
-              Register As Business
             </button>
           </div>
         )}

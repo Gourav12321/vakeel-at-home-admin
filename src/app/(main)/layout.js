@@ -19,7 +19,7 @@ export default function MainLayout({ children }) {
   useEffect(() => {
     const checkAuth = () => {
       if (!isAuthenticated || !getAccessToken() || isTokenExpired()) {
-        router.replace("/login");
+        router.replace("/");
       } else {
         setIsCheckingAuth(false);
       }
