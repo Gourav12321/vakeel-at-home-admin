@@ -200,7 +200,7 @@ const EnhancedTable = ({
           b[column.accessor || column.dataIndex]
         ? -1
         : 0,
-    render: column.render,
+    render: column.Cell || column.render || ((value, record, index) => value),
   }));
 
   const paginatedData = filteredData;
@@ -249,7 +249,9 @@ const EnhancedTable = ({
           columns={antColumns}
           dataSource={paginatedData}
           pagination={false}
-          rowKey={(record) => record._id || record.id || record.key || JSON.stringify(record)}
+          rowKey={(record) =>
+            record._id || record.id || record.key || JSON.stringify(record)
+          }
           bordered
           scroll={{ x: "max-content" }}
           className="custom-table"

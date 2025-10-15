@@ -8,10 +8,10 @@ import usePutQuery from "@/hooks/putQuery.hook";
 import Loader from "@/components/Loader/Loader";
 import EnhancedTable from "@/components/Table/EnhancedTable";
 
+import { Select } from "antd";
 import { apiUrls } from "@/apis";
 import { useEffect, useState } from "react";
 import { useSearchParams, usePathname, useRouter } from "next/navigation";
-import { Button, Switch } from "antd";
 
 const Lawyers = () => {
   const router = useRouter();
@@ -31,11 +31,9 @@ const Lawyers = () => {
     getQuery({
       url: `${apiUrls?.lawyers.getAllLawyers}?page=${page}&limit=${limit}`,
       onSuccess: (response) => {
-        console.log("API Response:", response);
         const dataList = Array.isArray(response?.data?.lawyers)
           ? response?.data?.lawyers
           : [];
-        console.log("Data List:", dataList);
         setTotalDocuments(response.data.pagination.totalLawyers);
 
         const mappedData = dataList.map((item) => ({
@@ -45,7 +43,7 @@ const Lawyers = () => {
           experience: item?.experience || 0,
           date: moment(item?.createdAt).format("DD-MM-YYYY") || "N/A",
           updatedAt: item?.updatedAt,
-          isProfileUpdated: item?.isProfileUpdated === true,
+          isProfileUpdated: item?.isProfileUpdated,
           _id: item?._id,
         }));
 
@@ -64,7 +62,6 @@ const Lawyers = () => {
       putData: {},
       onSuccess: (response) => {
         toast.success("Status updated successfully");
-        // Update the local state
         setTableData((prevData) =>
           prevData.map((item) =>
             item._id === lawyerId
@@ -100,21 +97,40 @@ const Lawyers = () => {
       Header: "Experience",
       accessor: "experience",
       width: 100,
-      Cell: ({ value }) => <span className="font-medium">{value} years</span>,
     },
     {
-      Header: "Profile Status",
+      Header: "Update Profile",
       accessor: "isProfileUpdated",
-      width: 120,
-      Cell: ({ value, row }) => (
-        <Switch
-          checked={value}
-          loading={toggleLoading}
-          onChange={() => handleToggleStatus(row._id, value)}
-          checkedChildren="Active"
-          unCheckedChildren="Inactive"
-        />
-      ),
+      width: 160,
+      Cell: ({ value, row }) => {
+        console.log("Profile Status Cell - value:", value, "row:", row);
+        return (
+          <Select
+            value={value ? "updated" : "not_updated"}
+            onChange={(newValue) => {
+              const newStatus = newValue === "updated";
+              handleToggleStatus(row._id, value);
+            }}
+            loading={toggleLoading}
+            style={{ width: "100%", minWidth: "140px" }}
+            size="small"
+            className="profile-status-select"
+          >
+            <Select.Option value="not_updated">
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
+                <span>Not Updated</span>
+              </div>
+            </Select.Option>
+            <Select.Option value="updated">
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                <span>Updated</span>
+              </div>
+            </Select.Option>
+          </Select>
+        );
+      },
     },
     {
       Header: "Created",
