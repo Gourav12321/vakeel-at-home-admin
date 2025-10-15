@@ -8,5 +8,6 @@ export const apiUrls = {
   lawyers: {
     getAllLawyers: "/lawyers",
     getLawyerById: "/lawyers",
+    toggleStatus: "/toggle-profile-status",
   },
 };

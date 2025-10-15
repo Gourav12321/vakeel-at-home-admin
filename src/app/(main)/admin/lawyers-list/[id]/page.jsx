@@ -1,9 +1,11 @@
 "use client";
 
+import moment from "moment";
 import Title from "@/components/Title/Title";
-import BackHeader from "@/components/BackHeader/BackHeader";
 import Loader from "@/components/Loader/Loader";
 import useGetQuery from "@/hooks/getQuery.hook";
+import BackHeader from "@/components/BackHeader/BackHeader";
+
 import { apiUrls } from "@/apis";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -15,7 +17,6 @@ import {
   Space,
   Tag,
   Avatar,
-  Divider,
   Descriptions,
 } from "antd";
 import {
@@ -23,7 +24,6 @@ import {
   PhoneOutlined,
   MailOutlined,
   EnvironmentOutlined,
-  CalendarOutlined,
   StarOutlined,
   TrophyOutlined,
   BookOutlined,
@@ -463,7 +463,9 @@ const LawyerDetailsPage = () => {
                   <div className="mt-1">
                     <Text className="text-xs">
                       {lawyerData.createdAt
-                        ? new Date(lawyerData.createdAt).toLocaleString()
+                        ? moment(lawyerData.createdAt).format(
+                            "DD MMM YYYY, h:mm A"
+                          )
                         : "N/A"}
                     </Text>
                   </div>
@@ -475,7 +477,9 @@ const LawyerDetailsPage = () => {
                   <div className="mt-1">
                     <Text className="text-xs">
                       {lawyerData.updatedAt
-                        ? new Date(lawyerData.updatedAt).toLocaleString()
+                        ? moment(lawyerData.updatedAt).format(
+                            "DD MMM YYYY, h:mm A"
+                          )
                         : "N/A"}
                     </Text>
                   </div>
