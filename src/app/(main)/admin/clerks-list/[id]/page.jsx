@@ -22,7 +22,7 @@ const ClerkDetail = () => {
     getQuery({
       url: `${apiUrls?.auth?.getById}/${clerkId}`,
       onSuccess: (response) => {
-        setClerkData(response.data.user);
+        setClerkData(response.data);
       },
       onFail: (error) => {
         console.error("Failed to fetch clerk data:", error);

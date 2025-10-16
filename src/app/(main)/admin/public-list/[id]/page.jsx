@@ -22,7 +22,7 @@ const PublicUserDetail = () => {
     getQuery({
       url: `${apiUrls?.auth?.getById}/${userId}`,
       onSuccess: (response) => {
-        setUserData(response.data.user);
+        setUserData(response.data);
       },
       onFail: (error) => {
         console.error("Failed to fetch user data:", error);
