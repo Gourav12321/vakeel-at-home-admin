@@ -29,6 +29,7 @@ import {
   ShoppingCartOutlined,
   HistoryOutlined,
   SearchOutlined,
+  UserAddOutlined,
 } from "@ant-design/icons";
 
 export const sidebarHeading = "VAKEEL AT HOME";
@@ -45,11 +46,16 @@ export const adminSidebarItems = [
     link: "/admin/lawyers-list",
     icon: UserOutlined,
   },
-  // {
-  //   name: "Property Management",
-  //   link: "/admin/property-management",
-  //   icon: QuestionCircleOutlined,
-  // },
+  {
+    name: "Clerks",
+    link: "/admin/clerks-list",
+    icon: UserAddOutlined,
+  },
+  {
+    name: "Public",
+    link: "/admin/public-list",
+    icon: UserOutlined,
+  },
   // {
   //   name: "Subscription Management",
   //   link: "/admin/subscription-management",

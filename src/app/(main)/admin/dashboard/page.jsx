@@ -313,7 +313,7 @@ const Dashboard = () => {
                   <Card
                     size="small"
                     className="text-center h-full"
-                    bodyStyle={{ padding: "16px" }}
+                    styles={{ body: { padding: "16px" } }}
                   >
                     <div className="mb-2">
                       <Tag
@@ -376,7 +376,7 @@ const Dashboard = () => {
                   <Card
                     size="small"
                     className="text-center h-full"
-                    bodyStyle={{ padding: "16px" }}
+                    styles={{ body: { padding: "16px" } }}
                   >
                     <div className="mb-3">
                       <Tag
@@ -453,7 +453,7 @@ const Dashboard = () => {
                   <Card
                     size="small"
                     className="text-center h-full hover:shadow-md transition-shadow"
-                    bodyStyle={{ padding: "16px" }}
+                    styles={{ body: { padding: "16px" } }}
                   >
                     <div className="mb-2">
                       <Tag
