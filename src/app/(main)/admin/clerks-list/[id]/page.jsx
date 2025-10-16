@@ -7,10 +7,12 @@ import usePutQuery from "@/hooks/putQuery.hook";
 import Loader from "@/components/Loader/Loader";
 
 import { apiUrls } from "@/apis";
-import { UserOutlined } from "@ant-design/icons";
 import { useParams } from "next/navigation";
-import { Card, Row, Col, Avatar, Descriptions, Tag, Switch } from "antd";
 import { useEffect, useState } from "react";
+import { UserOutlined } from "@ant-design/icons";
+import { Card, Row, Col, Avatar, Descriptions, Tag, Switch } from "antd";
+import Title from "@/components/Title/Title";
+import BackHeader from "@/components/BackHeader/BackHeader";
 
 const ClerkDetail = () => {
   const { id: clerkId } = useParams();
@@ -71,10 +73,13 @@ const ClerkDetail = () => {
   }
 
   return (
-    <div className="p-6">
+    <div className="">
+      <BackHeader label={"Back"} />
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-800">Clerk Details</h1>
-        <p className="text-gray-600">Complete information about the clerk</p>
+        <Title title={"Clerk Details"} />
+        <p className="text-gray-600 pt-2">
+          Complete information about the clerk
+        </p>
       </div>
 
       <Row gutter={[24, 24]}>

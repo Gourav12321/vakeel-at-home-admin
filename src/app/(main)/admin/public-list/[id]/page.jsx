@@ -11,6 +11,8 @@ import { UserOutlined } from "@ant-design/icons";
 import { useParams } from "next/navigation";
 import { Card, Row, Col, Avatar, Descriptions, Tag, Switch } from "antd";
 import { useEffect, useState } from "react";
+import Title from "@/components/Title/Title";
+import BackHeader from "@/components/BackHeader/BackHeader";
 
 const PublicUserDetail = () => {
   const { id: userId } = useParams();
@@ -71,12 +73,11 @@ const PublicUserDetail = () => {
   }
 
   return (
-    <div className="p-6">
+    <div className="">
+      <BackHeader label={"Back"} />
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-800">
-          Public User Details
-        </h1>
-        <p className="text-gray-600">
+        <Title title={"Public User Details"} />
+        <p className="text-gray-600 pt-2">
           Complete information about the public user
         </p>
       </div>
