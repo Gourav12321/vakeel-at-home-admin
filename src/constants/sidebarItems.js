@@ -71,16 +71,16 @@ export const adminSidebarItems = [
   //     },
   //   ],
   // },
-  // {
-  //   name: "Service Management",
-  //   link: "/admin/service-management",
-  //   icon: ToolOutlined,
-  // },
-  // {
-  //   name: "BQ Management",
-  //   link: "/admin/bq-management",
-  //   icon: HomeOutlined,
-  // },
+  {
+    name: "Ask Me Anything",
+    link: "/admin/ask-me-anything",
+    icon: ToolOutlined,
+  },
+  {
+    name: "VAH Gram",
+    link: "/admin/vah-gram",
+    icon: HomeOutlined,
+  },
   // {
   //   name: "Reviews Management",
   //   link: "/admin/reviews-management",
