@@ -28,50 +28,64 @@ const ReplyComponent = ({ reply, level = 0 }) => {
   }
 
   return (
-    <div
-      className={`ml-${level * 4} mt-3`}
-      style={{ marginLeft: `${level * 24}px` }}
-    >
+    <div style={{ marginLeft: `${level * 24}px`, marginTop: "12px" }}>
       <Card
         size="small"
-        className={`mb-3 ${
-          isHidden
-            ? "opacity-60 bg-gray-50"
-            : "shadow-sm hover:shadow-md transition-shadow"
-        }`}
+        style={{
+          marginBottom: "12px",
+          opacity: isHidden ? 0.6 : 1,
+          backgroundColor: isHidden ? "#f9fafb" : "#ffffff",
+          boxShadow: isHidden
+            ? "none"
+            : "0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)",
+        }}
         styles={{
           body: { padding: "12px 16px" },
         }}
       >
-        <div className="flex items-start gap-3">
+        <div style={{ display: "flex", alignItems: "flex-start", gap: "12px" }}>
           <Avatar
             size="default"
             icon={<UserOutlined />}
-            className="flex-shrink-0 bg-blue-100"
+            style={{ flexShrink: 0, backgroundColor: "#dbeafe" }}
           />
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-3 mb-2">
-              <Text strong className="text-sm text-gray-800">
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "12px",
+                marginBottom: "8px",
+              }}
+            >
+              <Text strong style={{ fontSize: "14px", color: "#1f2937" }}>
                 {reply.author && typeof reply.author === "object"
                   ? reply.author.fullName
                   : "Unknown User"}
               </Text>
-              <Text type="secondary" className="text-xs">
+              <Text type="secondary" style={{ fontSize: "12px" }}>
                 {reply.createdAt
                   ? moment(reply.createdAt).format("MMM DD, h:mm A")
                   : "No date"}
               </Text>
               {isHidden && (
-                <Tag color="red" size="small" className="ml-auto">
+                <Tag color="red" size="small" style={{ marginLeft: "auto" }}>
                   Hidden
                 </Tag>
               )}
             </div>
-            <Paragraph className="mb-2 text-sm text-gray-700 leading-relaxed">
+            <Paragraph
+              style={{
+                marginBottom: "8px",
+                fontSize: "14px",
+                color: "#374151",
+                lineHeight: "1.5",
+              }}
+            >
               {reply.comment || "No comment"}
             </Paragraph>
             {reply.replies && reply.replies.length > 0 && (
-              <Text type="secondary" className="text-xs">
+              <Text type="secondary" style={{ fontSize: "12px" }}>
                 {reply.replies.length}{" "}
                 {reply.replies.length === 1 ? "reply" : "replies"}
               </Text>
@@ -82,7 +96,7 @@ const ReplyComponent = ({ reply, level = 0 }) => {
 
       {/* Render nested replies */}
       {reply.replies && reply.replies.length > 0 && (
-        <div className="mt-1">
+        <div style={{ marginTop: "4px" }}>
           {reply.replies.map((nestedReply, index) => (
             <ReplyComponent
               key={nestedReply._id || index}
@@ -100,45 +114,92 @@ const ReplyComponent = ({ reply, level = 0 }) => {
 const CommentCard = ({ comment }) => {
   return (
     <Card
-      className="mb-6 shadow-md hover:shadow-lg transition-shadow border-0"
+      style={{
+        marginTop: "32px",
+        marginBottom: "32px",
+        boxShadow:
+          "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
+        border: "none",
+      }}
       styles={{
         body: { padding: "20px" },
       }}
     >
-      <div className="flex items-start gap-4">
+      <div style={{ display: "flex", alignItems: "flex-start", gap: "16px" }}>
         <Avatar
           size="large"
           src={comment.author?.profilePic}
           icon={<UserOutlined />}
-          className="flex-shrink-0 bg-gradient-to-br from-blue-500 to-purple-600"
+          style={{ flexShrink: 0 }}
         />
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-3 mb-3">
-            <Text strong className="text-lg text-gray-800">
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "12px",
+              marginBottom: "12px",
+            }}
+          >
+            <Text strong style={{ fontSize: "18px", color: "#1f2937" }}>
               {comment.author?.fullName || "Unknown User"}
             </Text>
-            <Text type="secondary" className="text-sm">
+            <Text type="secondary" style={{ fontSize: "14px" }}>
               {comment.author?.email || "No email"}
             </Text>
-            <Text type="secondary" className="text-xs ml-auto">
+            <Text
+              type="secondary"
+              style={{ fontSize: "12px", marginLeft: "auto" }}
+            >
               {comment.createdAt
                 ? moment(comment.createdAt).format("MMM DD, YYYY h:mm A")
                 : "No date"}
             </Text>
           </div>
 
-          <div className="mb-4">
-            <Text strong className="text-xl block mb-3 text-gray-900">
+          <div style={{ marginBottom: "16px" }}>
+            <Text
+              strong
+              style={{
+                fontSize: "20px",
+                display: "block",
+                marginBottom: "12px",
+                color: "#111827",
+              }}
+            >
               {comment.title || "No title"}
             </Text>
-            <Paragraph className="mb-0 text-gray-700 leading-relaxed text-base">
+            <Paragraph
+              style={{
+                marginBottom: 0,
+                color: "#374151",
+                lineHeight: "1.6",
+                fontSize: "16px",
+              }}
+            >
               {comment.comment || "No comment"}
             </Paragraph>
           </div>
 
           {comment.replies && comment.replies.length > 0 && (
-            <div className="border-l-4 border-blue-200 pl-4 bg-gray-50 rounded-r-lg p-3">
-              <Text strong className="text-sm text-gray-600 mb-3 block">
+            <div
+              style={{
+                borderLeft: "4px solid #dbeafe",
+                paddingLeft: "16px",
+                backgroundColor: "#f9fafb",
+                borderRadius: "0 8px 8px 0",
+                padding: "12px",
+              }}
+            >
+              <Text
+                strong
+                style={{
+                  fontSize: "14px",
+                  color: "#4b5563",
+                  marginBottom: "12px",
+                  display: "block",
+                }}
+              >
                 {comment.replies.length}{" "}
                 {comment.replies.length === 1 ? "Reply" : "Replies"}
               </Text>
@@ -209,40 +270,60 @@ const AskMeAnthing = () => {
     <>
       <Title title={"Ask Me Anything"} />
 
-      <div className="mb-6 flex justify-between items-center">
+      <div
+        style={{
+          marginBottom: "24px",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+        }}
+      >
         <div>
-          <Text type="secondary" className="text-base">
+          <Text type="secondary" style={{ fontSize: "16px" }}>
             Total Comments: {totalDocuments}
           </Text>
-          <Text type="secondary" className="text-sm block">
+          <Text type="secondary" style={{ fontSize: "14px", display: "block" }}>
             Showing {Math.min((page - 1) * limit + 1, totalDocuments)}-
             {Math.min(page * limit, totalDocuments)} of {totalDocuments}{" "}
             comments
           </Text>
         </div>
-        <div className="text-right">
-          <Text type="secondary" className="text-sm">
+        <div style={{ textAlign: "right" }}>
+          <Text type="secondary" style={{ fontSize: "14px" }}>
             Page {page} of {Math.ceil(totalDocuments / limit)}
           </Text>
         </div>
       </div>
 
       {loading ? (
-        <div className="flex justify-center items-center h-64">
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            height: "256px",
+          }}
+        >
           <Loader />
         </div>
       ) : (
-        <div className="pt-4">
+        <div style={{ paddingTop: "16px" }}>
           {commentsData.length > 0 ? (
-            <div className="space-y-4">
+            <div>
               {commentsData.map((comment, index) => (
                 <CommentCard key={comment._id || index} comment={comment} />
               ))}
             </div>
           ) : (
             <Card>
-              <div className="text-center py-8">
-                <MessageOutlined className="text-4xl text-gray-400 mb-4" />
+              <div style={{ textAlign: "center", padding: "32px 0" }}>
+                <MessageOutlined
+                  style={{
+                    fontSize: "48px",
+                    color: "#9ca3af",
+                    marginBottom: "16px",
+                  }}
+                />
                 <Text type="secondary">No comments found</Text>
               </div>
             </Card>
@@ -250,23 +331,44 @@ const AskMeAnthing = () => {
 
           {/* Pagination */}
           {totalDocuments > limit && (
-            <div className="mt-8 flex justify-center">
-              <Card className="shadow-sm">
-                <Space size="large" className="px-4 py-2">
+            <div
+              style={{
+                marginTop: "32px",
+                display: "flex",
+                justifyContent: "center",
+              }}
+            >
+              <Card
+                style={{
+                  boxShadow:
+                    "0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)",
+                }}
+              >
+                <Space size="large" style={{ padding: "8px 16px" }}>
                   <Button
                     type="primary"
                     icon={<LeftOutlined />}
                     disabled={page === 1}
                     onClick={() => handlePageChange(page - 1)}
-                    className="flex items-center gap-2"
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "8px",
+                    }}
                   >
                     Previous
                   </Button>
-                  <div className="flex items-center gap-2">
-                    <Text strong className="text-gray-700">
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "8px",
+                    }}
+                  >
+                    <Text strong style={{ color: "#374151" }}>
                       Page {page} of {Math.ceil(totalDocuments / limit)}
                     </Text>
-                    <Text type="secondary" className="text-sm">
+                    <Text type="secondary" style={{ fontSize: "14px" }}>
                       ({totalDocuments} total comments)
                     </Text>
                   </div>
@@ -275,7 +377,11 @@ const AskMeAnthing = () => {
                     icon={<RightOutlined />}
                     disabled={page >= Math.ceil(totalDocuments / limit)}
                     onClick={() => handlePageChange(page + 1)}
-                    className="flex items-center gap-2"
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "8px",
+                    }}
                   >
                     Next
                   </Button>

@@ -16,8 +16,10 @@ export const apiUrls = {
   },
   askMeAnything: {
     getComments: "/ask-me-anything/",
+    hideComments: "/ask-me-anything/id/hide/id",
   },
   vahGram: {
     getComments: "/posts",
+    hideComments: "posts/id/hide/id",
   },
 };
