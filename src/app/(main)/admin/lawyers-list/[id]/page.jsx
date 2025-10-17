@@ -18,6 +18,8 @@ import {
   Tag,
   Avatar,
   Descriptions,
+  Button,
+  Modal,
 } from "antd";
 import {
   UserOutlined,
@@ -27,6 +29,7 @@ import {
   StarOutlined,
   TrophyOutlined,
   BookOutlined,
+  EyeOutlined,
 } from "@ant-design/icons";
 
 const { Title: AntTitle, Text, Paragraph } = Typography;
@@ -36,6 +39,9 @@ const LawyerDetailsPage = () => {
   const lawyerId = params.id;
   const { getQuery, loading } = useGetQuery();
   const [lawyerData, setLawyerData] = useState(null);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [modalTitle, setModalTitle] = useState("");
+  const [modalUrl, setModalUrl] = useState("");
 
   useEffect(() => {
     if (lawyerId) {
@@ -51,6 +57,18 @@ const LawyerDetailsPage = () => {
       });
     }
   }, [lawyerId]);
+
+  const handlePreviewDocument = (url, title) => {
+    setModalUrl(url);
+    setModalTitle(title);
+    setModalVisible(true);
+  };
+
+  const handleModalClose = () => {
+    setModalVisible(false);
+    setModalUrl("");
+    setModalTitle("");
+  };
 
   if (loading) {
     return (
@@ -324,10 +342,44 @@ const LawyerDetailsPage = () => {
                   <Text>{lawyerData.gender || "Not specified"}</Text>
                 </Descriptions.Item>
                 <Descriptions.Item label="Aadhar Number">
-                  <Text code>{lawyerData.aadhar || "Not provided"}</Text>
+                  {lawyerData.aadhar ? (
+                    <Button
+                      type="link"
+                      size="small"
+                      icon={<EyeOutlined />}
+                      onClick={() =>
+                        handlePreviewDocument(
+                          lawyerData.aadhar,
+                          "Aadhar Document"
+                        )
+                      }
+                      style={{ padding: 0 }}
+                    >
+                      Preview Document
+                    </Button>
+                  ) : (
+                    <Text type="secondary">Not provided</Text>
+                  )}
                 </Descriptions.Item>
                 <Descriptions.Item label="PAN Card">
-                  <Text code>{lawyerData.pancard || "Not provided"}</Text>
+                  {lawyerData.pancard ? (
+                    <Button
+                      type="link"
+                      size="small"
+                      icon={<EyeOutlined />}
+                      onClick={() =>
+                        handlePreviewDocument(
+                          lawyerData.pancard,
+                          "PAN Card Document"
+                        )
+                      }
+                      style={{ padding: 0 }}
+                    >
+                      Preview Document
+                    </Button>
+                  ) : (
+                    <Text type="secondary">Not provided</Text>
+                  )}
                 </Descriptions.Item>
                 <Descriptions.Item label="Device Type">
                   <Tag color="blue">{lawyerData.device_type || "Unknown"}</Tag>
@@ -516,6 +568,27 @@ const LawyerDetailsPage = () => {
           </Row>
         )}
       </div>
+
+      {/* Document Preview Modal */}
+      <Modal
+        title={modalTitle}
+        open={modalVisible}
+        onCancel={handleModalClose}
+        footer={null}
+        width="90%"
+        style={{ top: 20 }}
+        bodyStyle={{ height: "80vh", padding: 0 }}
+      >
+        {modalUrl && (
+          <iframe
+            src={modalUrl}
+            width="100%"
+            height="100%"
+            style={{ border: "none" }}
+            title={modalTitle}
+          />
+        )}
+      </Modal>
     </>
   );
 };

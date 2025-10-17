@@ -7,9 +7,20 @@ import usePutQuery from "@/hooks/putQuery.hook";
 import Loader from "@/components/Loader/Loader";
 
 import { apiUrls } from "@/apis";
-import { UserOutlined } from "@ant-design/icons";
+import { UserOutlined, EyeOutlined } from "@ant-design/icons";
 import { useParams } from "next/navigation";
-import { Card, Row, Col, Avatar, Descriptions, Tag, Switch } from "antd";
+import {
+  Card,
+  Row,
+  Col,
+  Avatar,
+  Descriptions,
+  Tag,
+  Switch,
+  Button,
+  Space,
+  Modal,
+} from "antd";
 import { useEffect, useState } from "react";
 import Title from "@/components/Title/Title";
 import BackHeader from "@/components/BackHeader/BackHeader";
@@ -19,6 +30,9 @@ const PublicUserDetail = () => {
   const { getQuery, loading } = useGetQuery();
   const { putQuery, loading: toggleLoading } = usePutQuery();
   const [userData, setUserData] = useState(null);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [modalTitle, setModalTitle] = useState("");
+  const [modalUrl, setModalUrl] = useState("");
 
   const fetchUserData = () => {
     getQuery({
@@ -55,6 +69,18 @@ const PublicUserDetail = () => {
       fetchUserData();
     }
   }, [userId]);
+
+  const handlePreviewDocument = (url, title) => {
+    setModalUrl(url);
+    setModalTitle(title);
+    setModalVisible(true);
+  };
+
+  const handleModalClose = () => {
+    setModalVisible(false);
+    setModalUrl("");
+    setModalTitle("");
+  };
 
   if (loading) {
     return (
@@ -268,10 +294,41 @@ const PublicUserDetail = () => {
                 {userData.gender || "N/A"}
               </Descriptions.Item>
               <Descriptions.Item label="Aadhar">
-                {userData.aadhar || "N/A"}
+                {userData.aadhar ? (
+                  <Button
+                    type="link"
+                    size="small"
+                    icon={<EyeOutlined />}
+                    onClick={() =>
+                      handlePreviewDocument(userData.aadhar, "Aadhar Document")
+                    }
+                    style={{ padding: 0 }}
+                  >
+                    Preview Document
+                  </Button>
+                ) : (
+                  <Text type="secondary">N/A</Text>
+                )}
               </Descriptions.Item>
               <Descriptions.Item label="PAN Card">
-                {userData.pancard || "N/A"}
+                {userData.pancard ? (
+                  <Button
+                    type="link"
+                    size="small"
+                    icon={<EyeOutlined />}
+                    onClick={() =>
+                      handlePreviewDocument(
+                        userData.pancard,
+                        "PAN Card Document"
+                      )
+                    }
+                    style={{ padding: 0 }}
+                  >
+                    Preview Document
+                  </Button>
+                ) : (
+                  <Text type="secondary">N/A</Text>
+                )}
               </Descriptions.Item>
               <Descriptions.Item label="Device Type">
                 <Tag color="blue">{userData.device_type || "N/A"}</Tag>
@@ -360,6 +417,27 @@ const PublicUserDetail = () => {
           </Card>
         </Col>
       </Row>
+
+      {/* Document Preview Modal */}
+      <Modal
+        title={modalTitle}
+        open={modalVisible}
+        onCancel={handleModalClose}
+        footer={null}
+        width="90%"
+        style={{ top: 20 }}
+        bodyStyle={{ height: "80vh", padding: 0 }}
+      >
+        {modalUrl && (
+          <iframe
+            src={modalUrl}
+            width="100%"
+            height="100%"
+            style={{ border: "none" }}
+            title={modalTitle}
+          />
+        )}
+      </Modal>
     </div>
   );
 };

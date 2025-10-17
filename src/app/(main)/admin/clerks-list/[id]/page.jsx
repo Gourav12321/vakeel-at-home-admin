@@ -9,8 +9,19 @@ import Loader from "@/components/Loader/Loader";
 import { apiUrls } from "@/apis";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
-import { UserOutlined } from "@ant-design/icons";
-import { Card, Row, Col, Avatar, Descriptions, Tag, Switch } from "antd";
+import { UserOutlined, EyeOutlined } from "@ant-design/icons";
+import {
+  Card,
+  Row,
+  Col,
+  Avatar,
+  Descriptions,
+  Tag,
+  Switch,
+  Button,
+  Space,
+  Modal,
+} from "antd";
 import Title from "@/components/Title/Title";
 import BackHeader from "@/components/BackHeader/BackHeader";
 
@@ -19,6 +30,9 @@ const ClerkDetail = () => {
   const { getQuery, loading } = useGetQuery();
   const { putQuery, loading: toggleLoading } = usePutQuery();
   const [clerkData, setClerkData] = useState(null);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [modalTitle, setModalTitle] = useState("");
+  const [modalUrl, setModalUrl] = useState("");
 
   const fetchClerkData = () => {
     getQuery({
@@ -55,6 +69,18 @@ const ClerkDetail = () => {
       fetchClerkData();
     }
   }, [clerkId]);
+
+  const handlePreviewDocument = (url, title) => {
+    setModalUrl(url);
+    setModalTitle(title);
+    setModalVisible(true);
+  };
+
+  const handleModalClose = () => {
+    setModalVisible(false);
+    setModalUrl("");
+    setModalTitle("");
+  };
 
   if (loading) {
     return (
@@ -268,10 +294,41 @@ const ClerkDetail = () => {
                 {clerkData.gender || "N/A"}
               </Descriptions.Item>
               <Descriptions.Item label="Aadhar">
-                {clerkData.aadhar || "N/A"}
+                {clerkData.aadhar ? (
+                  <Button
+                    type="link"
+                    size="small"
+                    icon={<EyeOutlined />}
+                    onClick={() =>
+                      handlePreviewDocument(clerkData.aadhar, "Aadhar Document")
+                    }
+                    style={{ padding: 0 }}
+                  >
+                    Preview Document
+                  </Button>
+                ) : (
+                  <Text type="secondary">N/A</Text>
+                )}
               </Descriptions.Item>
               <Descriptions.Item label="PAN Card">
-                {clerkData.pancard || "N/A"}
+                {clerkData.pancard ? (
+                  <Button
+                    type="link"
+                    size="small"
+                    icon={<EyeOutlined />}
+                    onClick={() =>
+                      handlePreviewDocument(
+                        clerkData.pancard,
+                        "PAN Card Document"
+                      )
+                    }
+                    style={{ padding: 0 }}
+                  >
+                    Preview Document
+                  </Button>
+                ) : (
+                  <Text type="secondary">N/A</Text>
+                )}
               </Descriptions.Item>
               <Descriptions.Item label="Device Type">
                 <Tag color="blue">{clerkData.device_type || "N/A"}</Tag>
@@ -360,6 +417,27 @@ const ClerkDetail = () => {
           </Card>
         </Col>
       </Row>
+
+      {/* Document Preview Modal */}
+      <Modal
+        title={modalTitle}
+        open={modalVisible}
+        onCancel={handleModalClose}
+        footer={null}
+        width="90%"
+        style={{ top: 20 }}
+        bodyStyle={{ height: "80vh", padding: 0 }}
+      >
+        {modalUrl && (
+          <iframe
+            src={modalUrl}
+            width="100%"
+            height="100%"
+            style={{ border: "none" }}
+            title={modalTitle}
+          />
+        )}
+      </Modal>
     </div>
   );
 };
