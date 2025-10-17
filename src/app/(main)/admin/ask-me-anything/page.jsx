@@ -3,14 +3,28 @@
 import moment from "moment";
 import Title from "@/components/Title/Title";
 import useGetQuery from "@/hooks/getQuery.hook";
+import usePutQuery from "@/hooks/putQuery.hook";
 import Loader from "@/components/Loader/Loader";
 
-import { Card, Avatar, Button, Tag, Space, Typography, Divider } from "antd";
+import {
+  Card,
+  Avatar,
+  Button,
+  Tag,
+  Space,
+  Typography,
+  Divider,
+  Select,
+  Dropdown,
+} from "antd";
 import {
   UserOutlined,
   MessageOutlined,
   LeftOutlined,
   RightOutlined,
+  MoreOutlined,
+  EyeInvisibleOutlined,
+  EyeOutlined,
 } from "@ant-design/icons";
 import { apiUrls } from "@/apis";
 import { useEffect, useState } from "react";
@@ -19,13 +33,38 @@ import { useSearchParams, usePathname, useRouter } from "next/navigation";
 const { Text, Paragraph } = Typography;
 
 // Component to render nested replies
-const ReplyComponent = ({ reply, level = 0 }) => {
+const ReplyComponent = ({
+  reply,
+  level = 0,
+  parentCommentId,
+  onHideToggle,
+}) => {
   const isHidden = reply.hide;
   const maxLevel = 3; // Maximum nesting level to prevent infinite recursion
+  const { putQuery, loading: hideLoading } = usePutQuery();
 
   if (level > maxLevel) {
     return null;
   }
+
+  const handleHideToggle = (replyId, currentHideStatus) => {
+    const url = `/ask-me-anything/${parentCommentId}/hide/${replyId}`;
+    console.log("Hide toggle URL:", url);
+    console.log("Parent Comment ID:", parentCommentId);
+    console.log("Reply ID:", replyId);
+    console.log("Current Hide Status:", currentHideStatus);
+
+    putQuery({
+      url: url,
+      onSuccess: (response) => {
+        console.log("Hide toggle success:", response);
+        onHideToggle && onHideToggle(replyId, !currentHideStatus);
+      },
+      onFail: (error) => {
+        console.error("Failed to toggle hide status:", error);
+      },
+    });
+  };
 
   return (
     <div style={{ marginLeft: `${level * 24}px`, marginTop: "12px" }}>
@@ -38,24 +77,36 @@ const ReplyComponent = ({ reply, level = 0 }) => {
           boxShadow: isHidden
             ? "none"
             : "0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)",
+          width: "100%",
+          maxWidth: "100%",
         }}
         styles={{
           body: { padding: "12px 16px" },
         }}
       >
-        <div style={{ display: "flex", alignItems: "flex-start", gap: "12px" }}>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "flex-start",
+            gap: "12px",
+          }}
+        >
           <Avatar
             size="default"
             icon={<UserOutlined />}
-            style={{ flexShrink: 0, backgroundColor: "#dbeafe" }}
+            style={{
+              flexShrink: 0,
+              backgroundColor: "#dbeafe",
+            }}
           />
           <div style={{ flex: 1, minWidth: 0 }}>
             <div
               style={{
                 display: "flex",
                 alignItems: "center",
-                gap: "12px",
+                gap: "8px",
                 marginBottom: "8px",
+                flexWrap: "wrap",
               }}
             >
               <Text strong style={{ fontSize: "14px", color: "#1f2937" }}>
@@ -68,11 +119,54 @@ const ReplyComponent = ({ reply, level = 0 }) => {
                   ? moment(reply.createdAt).format("MMM DD, h:mm A")
                   : "No date"}
               </Text>
-              {isHidden && (
-                <Tag color="red" size="small" style={{ marginLeft: "auto" }}>
-                  Hidden
-                </Tag>
-              )}
+              <div
+                style={{
+                  marginLeft: "auto",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "8px",
+                }}
+              >
+                {isHidden && (
+                  <Tag color="red" size="small">
+                    Hidden
+                  </Tag>
+                )}
+                <Dropdown
+                  menu={{
+                    items: [
+                      {
+                        key: "hide",
+                        label: isHidden ? "Show" : "Hide",
+                        icon: isHidden ? (
+                          <EyeOutlined />
+                        ) : (
+                          <EyeInvisibleOutlined />
+                        ),
+                        onClick: () => {
+                          console.log("Dropdown clicked for reply:", reply._id);
+                          alert(`Hide/Show clicked for reply: ${reply._id}`);
+                          handleHideToggle(reply._id, isHidden);
+                        },
+                      },
+                    ],
+                  }}
+                  trigger={["click"]}
+                  placement="bottomRight"
+                >
+                  <Button
+                    type="text"
+                    size="small"
+                    icon={<MoreOutlined />}
+                    loading={hideLoading}
+                    style={{ padding: "4px" }}
+                    onClick={(e) => {
+                      console.log("Button clicked for reply:", reply._id);
+                      e.stopPropagation();
+                    }}
+                  />
+                </Dropdown>
+              </div>
             </div>
             <Paragraph
               style={{
@@ -102,6 +196,8 @@ const ReplyComponent = ({ reply, level = 0 }) => {
               key={nestedReply._id || index}
               reply={nestedReply}
               level={level + 1}
+              parentCommentId={parentCommentId}
+              onHideToggle={onHideToggle}
             />
           ))}
         </div>
@@ -111,7 +207,28 @@ const ReplyComponent = ({ reply, level = 0 }) => {
 };
 
 // Component to render main comment
-const CommentCard = ({ comment }) => {
+const CommentCard = ({ comment, onHideToggle }) => {
+  const { putQuery, loading: hideLoading } = usePutQuery();
+
+  const handleHideToggle = (replyId, currentHideStatus) => {
+    const url = `/ask-me-anything/${comment._id}/hide/${replyId}`;
+    console.log("CommentCard Hide toggle URL:", url);
+    console.log("Comment ID:", comment._id);
+    console.log("Reply ID:", replyId);
+    console.log("Current Hide Status:", currentHideStatus);
+
+    putQuery({
+      url: url,
+      onSuccess: (response) => {
+        console.log("CommentCard Hide toggle success:", response);
+        onHideToggle && onHideToggle(replyId, !currentHideStatus);
+      },
+      onFail: (error) => {
+        console.error("CommentCard Failed to toggle hide status:", error);
+      },
+    });
+  };
+
   return (
     <Card
       style={{
@@ -120,12 +237,20 @@ const CommentCard = ({ comment }) => {
         boxShadow:
           "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
         border: "none",
+        width: "100%",
+        maxWidth: "100%",
       }}
       styles={{
         body: { padding: "20px" },
       }}
     >
-      <div style={{ display: "flex", alignItems: "flex-start", gap: "16px" }}>
+      <div
+        style={{
+          display: "flex",
+          alignItems: "flex-start",
+          gap: "16px",
+        }}
+      >
         <Avatar
           size="large"
           src={comment.author?.profilePic}
@@ -137,8 +262,9 @@ const CommentCard = ({ comment }) => {
             style={{
               display: "flex",
               alignItems: "center",
-              gap: "12px",
+              gap: "8px",
               marginBottom: "12px",
+              flexWrap: "wrap",
             }}
           >
             <Text strong style={{ fontSize: "18px", color: "#1f2937" }}>
@@ -208,6 +334,8 @@ const CommentCard = ({ comment }) => {
                   key={reply._id || index}
                   reply={reply}
                   level={0}
+                  parentCommentId={comment._id}
+                  onHideToggle={onHideToggle}
                 />
               ))}
             </div>
@@ -227,6 +355,18 @@ const AskMeAnthing = () => {
 
   const [commentsData, setCommentsData] = useState([]);
   const [totalDocuments, setTotalDocuments] = useState(0);
+
+  const handleHideToggle = (replyId, newHideStatus) => {
+    setCommentsData((prevData) =>
+      prevData.map((comment) => ({
+        ...comment,
+        replies:
+          comment.replies?.map((reply) =>
+            reply._id === replyId ? { ...reply, hide: newHideStatus } : reply
+          ) || [],
+      }))
+    );
+  };
 
   const page = parseInt(searchParams.get("page") || "1", 10);
   const limit = 5; // Fixed to 5 comments per page
@@ -275,10 +415,12 @@ const AskMeAnthing = () => {
           marginBottom: "24px",
           display: "flex",
           justifyContent: "space-between",
-          alignItems: "center",
+          alignItems: "flex-start",
+          flexWrap: "wrap",
+          gap: "16px",
         }}
       >
-        <div>
+        <div style={{ flex: 1, minWidth: 0 }}>
           <Text type="secondary" style={{ fontSize: "16px" }}>
             Total Comments: {totalDocuments}
           </Text>
@@ -288,7 +430,7 @@ const AskMeAnthing = () => {
             comments
           </Text>
         </div>
-        <div style={{ textAlign: "right" }}>
+        <div style={{ textAlign: "right", flexShrink: 0 }}>
           <Text type="secondary" style={{ fontSize: "14px" }}>
             Page {page} of {Math.ceil(totalDocuments / limit)}
           </Text>
@@ -307,11 +449,15 @@ const AskMeAnthing = () => {
           <Loader />
         </div>
       ) : (
-        <div style={{ paddingTop: "16px" }}>
+        <div style={{ paddingTop: "16px", width: "100%", maxWidth: "100%" }}>
           {commentsData.length > 0 ? (
-            <div>
+            <div style={{ width: "100%" }}>
               {commentsData.map((comment, index) => (
-                <CommentCard key={comment._id || index} comment={comment} />
+                <CommentCard
+                  key={comment._id || index}
+                  comment={comment}
+                  onHideToggle={handleHideToggle}
+                />
               ))}
             </div>
           ) : (
@@ -336,15 +482,26 @@ const AskMeAnthing = () => {
                 marginTop: "32px",
                 display: "flex",
                 justifyContent: "center",
+                width: "100%",
               }}
             >
               <Card
                 style={{
                   boxShadow:
                     "0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)",
+                  width: "100%",
+                  maxWidth: "600px",
                 }}
               >
-                <Space size="large" style={{ padding: "8px 16px" }}>
+                <Space
+                  size="large"
+                  style={{
+                    padding: "8px 16px",
+                    width: "100%",
+                    justifyContent: "center",
+                    flexWrap: "wrap",
+                  }}
+                >
                   <Button
                     type="primary"
                     icon={<LeftOutlined />}
@@ -354,6 +511,7 @@ const AskMeAnthing = () => {
                       display: "flex",
                       alignItems: "center",
                       gap: "8px",
+                      minWidth: "100px",
                     }}
                   >
                     Previous
@@ -363,6 +521,9 @@ const AskMeAnthing = () => {
                       display: "flex",
                       alignItems: "center",
                       gap: "8px",
+                      flexWrap: "wrap",
+                      justifyContent: "center",
+                      textAlign: "center",
                     }}
                   >
                     <Text strong style={{ color: "#374151" }}>
@@ -381,6 +542,7 @@ const AskMeAnthing = () => {
                       display: "flex",
                       alignItems: "center",
                       gap: "8px",
+                      minWidth: "100px",
                     }}
                   >
                     Next
