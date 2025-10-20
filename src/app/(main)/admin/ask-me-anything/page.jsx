@@ -100,13 +100,7 @@ const ConfirmationModal = ({
 };
 
 // Component to render nested replies
-const ReplyComponent = ({
-  reply,
-  level = 0,
-  parentCommentId,
-  onHideToggle,
-  onShowModal,
-}) => {
+const ReplyComponent = ({ reply, level = 0, parentCommentId, onShowModal }) => {
   const isHidden = reply.hide;
   const maxLevel = 3; // Maximum nesting level to prevent infinite recursion
   const { putQuery, loading: hideLoading } = usePutQuery();
@@ -115,29 +109,9 @@ const ReplyComponent = ({
     return null;
   }
 
-  const handleHideToggle = (replyId, currentHideStatus) => {
-    const url = `/ask-me-anything/${parentCommentId}/hide/${replyId}`;
-    console.log("Hide toggle URL:", url);
-    console.log("Parent Comment ID:", parentCommentId);
-    console.log("Reply ID:", replyId);
-    console.log("Current Hide Status:", currentHideStatus);
-
-    putQuery({
-      url: url,
-      onSuccess: (response) => {
-        console.log("Hide toggle success:", response);
-        onHideToggle && onHideToggle(replyId, !currentHideStatus);
-      },
-      onFail: (error) => {
-        console.error("Failed to toggle hide status:", error);
-      },
-    });
-  };
-
-  const handleModalConfirm = () => {
-    handleHideToggle(reply._id, isHidden);
-    onShowModal && onShowModal(null);
-  };
+  // Note: These functions are no longer needed since we refresh data from server
+  // const handleHideToggle = (replyId, currentHideStatus) => { ... };
+  // const handleModalConfirm = () => { ... };
 
   return (
     <div style={{ marginLeft: `${level * 24}px`, marginTop: "12px" }}>
@@ -284,7 +258,6 @@ const ReplyComponent = ({
               reply={nestedReply}
               level={level + 1}
               parentCommentId={parentCommentId}
-              onHideToggle={onHideToggle}
               onShowModal={onShowModal}
             />
           ))}
@@ -295,56 +268,13 @@ const ReplyComponent = ({
 };
 
 // Component to render main comment
-const CommentCard = ({
-  comment,
-  onHideToggle,
-  onMainPostHideToggle,
-  onShowModal,
-}) => {
+const CommentCard = ({ comment, onShowModal }) => {
   const { putQuery, loading: hideLoading } = usePutQuery();
 
-  const handleHideToggle = (replyId, currentHideStatus) => {
-    const url = `/ask-me-anything/${comment._id}/hide/${replyId}`;
-    console.log("CommentCard Hide toggle URL:", url);
-    console.log("Comment ID:", comment._id);
-    console.log("Reply ID:", replyId);
-    console.log("Current Hide Status:", currentHideStatus);
-
-    putQuery({
-      url: url,
-      onSuccess: (response) => {
-        console.log("CommentCard Hide toggle success:", response);
-        onHideToggle && onHideToggle(replyId, !currentHideStatus);
-      },
-      onFail: (error) => {
-        console.error("CommentCard Failed to toggle hide status:", error);
-      },
-    });
-  };
-
-  const handleMainPostHideToggle = (commentId, currentHideStatus) => {
-    const url = `/ask-me-anything/${commentId}/hide`;
-    console.log("Main post hide toggle URL:", url);
-    console.log("Comment ID:", commentId);
-    console.log("Current Hide Status:", currentHideStatus);
-
-    putQuery({
-      url: url,
-      onSuccess: (response) => {
-        console.log("Main post hide toggle success:", response);
-        onMainPostHideToggle &&
-          onMainPostHideToggle(commentId, !currentHideStatus);
-      },
-      onFail: (error) => {
-        console.error("Failed to toggle main post hide status:", error);
-      },
-    });
-  };
-
-  const handleMainPostModalConfirm = () => {
-    handleMainPostHideToggle(comment._id, isMainPostHidden);
-    onShowModal && onShowModal(null);
-  };
+  // Note: These functions are no longer needed since we refresh data from server
+  // const handleHideToggle = (replyId, currentHideStatus) => { ... };
+  // const handleMainPostHideToggle = (commentId, currentHideStatus) => { ... };
+  // const handleMainPostModalConfirm = () => { ... };
 
   const isMainPostHidden = comment.hide;
 
@@ -512,7 +442,6 @@ const CommentCard = ({
                   reply={reply}
                   level={0}
                   parentCommentId={comment._id}
-                  onHideToggle={onHideToggle}
                   onShowModal={onShowModal}
                 />
               ))}
@@ -537,27 +466,9 @@ const AskMeAnthing = () => {
   const [modalData, setModalData] = useState(null);
   const [modalLoading, setModalLoading] = useState(false);
 
-  const handleHideToggle = (replyId, newHideStatus) => {
-    setCommentsData((prevData) =>
-      prevData.map((comment) => ({
-        ...comment,
-        replies:
-          comment.replies?.map((reply) =>
-            reply._id === replyId ? { ...reply, hide: newHideStatus } : reply
-          ) || [],
-      }))
-    );
-  };
-
-  const handleMainPostHideToggle = (commentId, newHideStatus) => {
-    setCommentsData((prevData) =>
-      prevData.map((comment) =>
-        comment._id === commentId
-          ? { ...comment, hide: newHideStatus }
-          : comment
-      )
-    );
-  };
+  // Note: These functions are no longer needed since we refresh data from server
+  // const handleHideToggle = (replyId, newHideStatus) => { ... };
+  // const handleMainPostHideToggle = (commentId, newHideStatus) => { ... };
 
   const handleShowModal = (data) => {
     setModalData(data);
@@ -580,7 +491,8 @@ const AskMeAnthing = () => {
         url: url,
         onSuccess: (response) => {
           console.log("Main post hide toggle success:", response);
-          handleMainPostHideToggle(modalData.id, modalData.isHidden);
+          // Refresh the data after successful toggle
+          fetchData();
           setModalData(null);
           setModalLoading(false);
         },
@@ -597,7 +509,8 @@ const AskMeAnthing = () => {
         url: url,
         onSuccess: (response) => {
           console.log("Reply hide toggle success:", response);
-          handleHideToggle(modalData.id, modalData.isHidden);
+          // Refresh the data after successful toggle
+          fetchData();
           setModalData(null);
           setModalLoading(false);
         },
@@ -698,8 +611,6 @@ const AskMeAnthing = () => {
                 <CommentCard
                   key={comment._id || index}
                   comment={comment}
-                  onHideToggle={handleHideToggle}
-                  onMainPostHideToggle={handleMainPostHideToggle}
                   onShowModal={handleShowModal}
                 />
               ))}
