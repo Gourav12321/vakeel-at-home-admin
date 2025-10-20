@@ -13,9 +13,8 @@ import {
   Tag,
   Space,
   Typography,
-  Divider,
-  Select,
   Dropdown,
+  Modal,
 } from "antd";
 import {
   UserOutlined,
@@ -32,12 +31,81 @@ import { useSearchParams, usePathname, useRouter } from "next/navigation";
 
 const { Text, Paragraph } = Typography;
 
+// Confirmation Modal Component
+const ConfirmationModal = ({
+  visible,
+  onCancel,
+  onConfirm,
+  title,
+  content,
+  confirmText,
+  loading,
+}) => {
+  return (
+    <Modal
+      title={title}
+      open={visible}
+      onCancel={onCancel}
+      onOk={onConfirm}
+      okText={confirmText}
+      cancelText="Cancel"
+      confirmLoading={loading}
+      width={500}
+    >
+      <div style={{ padding: "16px 0" }}>
+        <div style={{ marginBottom: "16px" }}>
+          <Text strong style={{ fontSize: "16px", color: "#1f2937" }}>
+            {content?.author || "N/A"}
+          </Text>
+          <Text
+            type="secondary"
+            style={{ fontSize: "14px", display: "block", marginTop: "4px" }}
+          >
+            {content?.email || "No email"}
+          </Text>
+        </div>
+        <div style={{ marginBottom: "16px" }}>
+          <Text
+            strong
+            style={{
+              fontSize: "14px",
+              color: "#4b5563",
+              display: "block",
+              marginBottom: "8px",
+            }}
+          >
+            {content?.isReply ? "Reply:" : "Comment:"}
+          </Text>
+          <div
+            style={{
+              backgroundColor: "#f9fafb",
+              padding: "12px",
+              borderRadius: "6px",
+              border: "1px solid #e5e7eb",
+            }}
+          >
+            <Text style={{ fontSize: "14px", lineHeight: "1.5" }}>
+              {content?.text || "No content"}
+            </Text>
+          </div>
+        </div>
+        <Text type="secondary" style={{ fontSize: "12px" }}>
+          {content?.isReply
+            ? "This action will hide/show the selected reply."
+            : "This action will hide/show the entire post and all its replies."}
+        </Text>
+      </div>
+    </Modal>
+  );
+};
+
 // Component to render nested replies
 const ReplyComponent = ({
   reply,
   level = 0,
   parentCommentId,
   onHideToggle,
+  onShowModal,
 }) => {
   const isHidden = reply.hide;
   const maxLevel = 3; // Maximum nesting level to prevent infinite recursion
@@ -64,6 +132,11 @@ const ReplyComponent = ({
         console.error("Failed to toggle hide status:", error);
       },
     });
+  };
+
+  const handleModalConfirm = () => {
+    handleHideToggle(reply._id, isHidden);
+    onShowModal && onShowModal(null);
   };
 
   return (
@@ -145,8 +218,22 @@ const ReplyComponent = ({
                         ),
                         onClick: () => {
                           console.log("Dropdown clicked for reply:", reply._id);
-                          alert(`Hide/Show clicked for reply: ${reply._id}`);
-                          handleHideToggle(reply._id, isHidden);
+                          onShowModal &&
+                            onShowModal({
+                              type: "reply",
+                              id: reply._id,
+                              author:
+                                reply.author && typeof reply.author === "object"
+                                  ? reply.author.fullName
+                                  : "Unknown User",
+                              email:
+                                reply.author && typeof reply.author === "object"
+                                  ? reply.author.email
+                                  : "No email",
+                              text: reply.comment || "No comment",
+                              isHidden: isHidden,
+                              parentCommentId: parentCommentId,
+                            });
                         },
                       },
                     ],
@@ -198,6 +285,7 @@ const ReplyComponent = ({
               level={level + 1}
               parentCommentId={parentCommentId}
               onHideToggle={onHideToggle}
+              onShowModal={onShowModal}
             />
           ))}
         </div>
@@ -207,7 +295,12 @@ const ReplyComponent = ({
 };
 
 // Component to render main comment
-const CommentCard = ({ comment, onHideToggle }) => {
+const CommentCard = ({
+  comment,
+  onHideToggle,
+  onMainPostHideToggle,
+  onShowModal,
+}) => {
   const { putQuery, loading: hideLoading } = usePutQuery();
 
   const handleHideToggle = (replyId, currentHideStatus) => {
@@ -229,6 +322,32 @@ const CommentCard = ({ comment, onHideToggle }) => {
     });
   };
 
+  const handleMainPostHideToggle = (commentId, currentHideStatus) => {
+    const url = `/ask-me-anything/${commentId}/hide`;
+    console.log("Main post hide toggle URL:", url);
+    console.log("Comment ID:", commentId);
+    console.log("Current Hide Status:", currentHideStatus);
+
+    putQuery({
+      url: url,
+      onSuccess: (response) => {
+        console.log("Main post hide toggle success:", response);
+        onMainPostHideToggle &&
+          onMainPostHideToggle(commentId, !currentHideStatus);
+      },
+      onFail: (error) => {
+        console.error("Failed to toggle main post hide status:", error);
+      },
+    });
+  };
+
+  const handleMainPostModalConfirm = () => {
+    handleMainPostHideToggle(comment._id, isMainPostHidden);
+    onShowModal && onShowModal(null);
+  };
+
+  const isMainPostHidden = comment.hide;
+
   return (
     <Card
       style={{
@@ -239,6 +358,8 @@ const CommentCard = ({ comment, onHideToggle }) => {
         border: "none",
         width: "100%",
         maxWidth: "100%",
+        opacity: isMainPostHidden ? 0.6 : 1,
+        backgroundColor: isMainPostHidden ? "#f9fafb" : "#ffffff",
       }}
       styles={{
         body: { padding: "20px" },
@@ -273,14 +394,70 @@ const CommentCard = ({ comment, onHideToggle }) => {
             <Text type="secondary" style={{ fontSize: "14px" }}>
               {comment.author?.email || "No email"}
             </Text>
-            <Text
-              type="secondary"
-              style={{ fontSize: "12px", marginLeft: "auto" }}
+            <div
+              style={{
+                marginLeft: "auto",
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+              }}
             >
-              {comment.createdAt
-                ? moment(comment.createdAt).format("MMM DD, YYYY h:mm A")
-                : "No date"}
-            </Text>
+              {isMainPostHidden && (
+                <Tag color="red" size="small">
+                  Hidden
+                </Tag>
+              )}
+              <Text type="secondary" style={{ fontSize: "12px" }}>
+                {comment.createdAt
+                  ? moment(comment.createdAt).format("MMM DD, YYYY h:mm A")
+                  : "No date"}
+              </Text>
+              <Dropdown
+                menu={{
+                  items: [
+                    {
+                      key: "hide",
+                      label: isMainPostHidden ? "Show" : "Hide",
+                      icon: isMainPostHidden ? (
+                        <EyeOutlined />
+                      ) : (
+                        <EyeInvisibleOutlined />
+                      ),
+                      onClick: () => {
+                        console.log(
+                          "Dropdown clicked for main post:",
+                          comment._id
+                        );
+                        onShowModal &&
+                          onShowModal({
+                            type: "mainPost",
+                            id: comment._id,
+                            author: comment.author?.fullName || "Unknown User",
+                            email: comment.author?.email || "No email",
+                            text: comment.comment || "No comment",
+                            title: comment.title || "No title",
+                            isHidden: isMainPostHidden,
+                          });
+                      },
+                    },
+                  ],
+                }}
+                trigger={["click"]}
+                placement="bottomRight"
+              >
+                <Button
+                  type="text"
+                  size="small"
+                  icon={<MoreOutlined />}
+                  loading={hideLoading}
+                  style={{ padding: "4px" }}
+                  onClick={(e) => {
+                    console.log("Button clicked for main post:", comment._id);
+                    e.stopPropagation();
+                  }}
+                />
+              </Dropdown>
+            </div>
           </div>
 
           <div style={{ marginBottom: "16px" }}>
@@ -336,6 +513,7 @@ const CommentCard = ({ comment, onHideToggle }) => {
                   level={0}
                   parentCommentId={comment._id}
                   onHideToggle={onHideToggle}
+                  onShowModal={onShowModal}
                 />
               ))}
             </div>
@@ -352,9 +530,12 @@ const AskMeAnthing = () => {
   const searchParams = useSearchParams();
 
   const { getQuery, loading } = useGetQuery();
+  const { putQuery } = usePutQuery();
 
   const [commentsData, setCommentsData] = useState([]);
   const [totalDocuments, setTotalDocuments] = useState(0);
+  const [modalData, setModalData] = useState(null);
+  const [modalLoading, setModalLoading] = useState(false);
 
   const handleHideToggle = (replyId, newHideStatus) => {
     setCommentsData((prevData) =>
@@ -366,6 +547,67 @@ const AskMeAnthing = () => {
           ) || [],
       }))
     );
+  };
+
+  const handleMainPostHideToggle = (commentId, newHideStatus) => {
+    setCommentsData((prevData) =>
+      prevData.map((comment) =>
+        comment._id === commentId
+          ? { ...comment, hide: newHideStatus }
+          : comment
+      )
+    );
+  };
+
+  const handleShowModal = (data) => {
+    setModalData(data);
+  };
+
+  const handleModalCancel = () => {
+    setModalData(null);
+    setModalLoading(false);
+  };
+
+  const handleModalConfirm = () => {
+    if (!modalData) return;
+
+    setModalLoading(true);
+
+    if (modalData.type === "mainPost") {
+      // Call API directly for main post
+      const url = `/ask-me-anything/${modalData.id}/hide`;
+      putQuery({
+        url: url,
+        onSuccess: (response) => {
+          console.log("Main post hide toggle success:", response);
+          handleMainPostHideToggle(modalData.id, modalData.isHidden);
+          setModalData(null);
+          setModalLoading(false);
+        },
+        onFail: (error) => {
+          console.error("Failed to toggle main post hide status:", error);
+          setModalData(null);
+          setModalLoading(false);
+        },
+      });
+    } else if (modalData.type === "reply") {
+      // Call API directly for reply
+      const url = `/ask-me-anything/${modalData.parentCommentId}/hide/${modalData.id}`;
+      putQuery({
+        url: url,
+        onSuccess: (response) => {
+          console.log("Reply hide toggle success:", response);
+          handleHideToggle(modalData.id, modalData.isHidden);
+          setModalData(null);
+          setModalLoading(false);
+        },
+        onFail: (error) => {
+          console.error("Failed to toggle reply hide status:", error);
+          setModalData(null);
+          setModalLoading(false);
+        },
+      });
+    }
   };
 
   const page = parseInt(searchParams.get("page") || "1", 10);
@@ -457,6 +699,8 @@ const AskMeAnthing = () => {
                   key={comment._id || index}
                   comment={comment}
                   onHideToggle={handleHideToggle}
+                  onMainPostHideToggle={handleMainPostHideToggle}
+                  onShowModal={handleShowModal}
                 />
               ))}
             </div>
@@ -553,6 +797,32 @@ const AskMeAnthing = () => {
           )}
         </div>
       )}
+
+      {/* Confirmation Modal */}
+      <ConfirmationModal
+        visible={!!modalData}
+        onCancel={handleModalCancel}
+        onConfirm={handleModalConfirm}
+        title={
+          modalData
+            ? `${modalData.isHidden ? "Show" : "Hide"} ${
+                modalData.type === "mainPost" ? "Post" : "Reply"
+              }`
+            : ""
+        }
+        content={
+          modalData
+            ? {
+                author: modalData.author,
+                email: modalData.email,
+                text: modalData.text,
+                isReply: modalData.type === "reply",
+              }
+            : null
+        }
+        confirmText={modalData ? `${modalData.isHidden ? "Show" : "Hide"}` : ""}
+        loading={modalLoading}
+      />
     </>
   );
 };

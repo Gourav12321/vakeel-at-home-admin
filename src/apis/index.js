@@ -1,5 +1,5 @@
-// export const apiBaseUrl = "http://localhost:5970/api/v1";
-export const apiBaseUrl = "https://vakeel-at-home-server.vercel.app/api/v1";
+export const apiBaseUrl = "http://localhost:5970/api/v1";
+// export const apiBaseUrl = "https://vakeel-at-home-server.vercel.app/api/v1";
 
 export const apiUrls = {
   auth: {
@@ -17,6 +17,7 @@ export const apiUrls = {
   askMeAnything: {
     getComments: "/ask-me-anything/",
     hideComments: "/ask-me-anything/id/hide/id",
+    hidePost: "ask-me-anything/id/hide",
   },
   vahGram: {
     getComments: "/posts",
