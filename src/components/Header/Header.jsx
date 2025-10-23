@@ -15,8 +15,8 @@ const Header = () => {
   return (
     <div className="w-full mx-auto flex flex-col lg:flex-row items-start lg:items-center justify-between gap-3 lg:gap-6">
       {/* Greeting */}
-      <h1 className="text-base sm:text-lg lg:text-xl font-semibold text-slate-800 leading-snug">
-        Hi {user?.fullName || "User"}
+      <h1 className="text-base sm:text-lg lg:text-xl font-semibold text-[#C2A368] leading-snug">
+        Hi, {user?.fullName || "User"}
       </h1>
 
       {/* Actions */}

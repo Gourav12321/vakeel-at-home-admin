@@ -104,7 +104,7 @@ export default function Sidebar({
         ref={sidebar}
         className={`fixed left-0 top-0 h-screen shadow-lg transition-all duration-300 ${
           isCollapsed ? "w-20" : "w-64"
-        } bg-[#366598] ${
+        } bg-[#1E3A5F] ${
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         } lg:translate-x-0 flex flex-col z-40`}
       >
@@ -112,7 +112,7 @@ export default function Sidebar({
           <div className="p-4 flex flex-col items-center gap-2 relative">
             <button
               onClick={() => setIsCollapsed(!isCollapsed)}
-              className="hidden lg:flex absolute top-5 -right-3 w-6 h-6 bg-white rounded-full items-center justify-center text-[#e5cf44] shadow-md cursor-pointer"
+              className="hidden lg:flex absolute top-5 -right-3 w-6 h-6 bg-white rounded-full items-center justify-center text-[#C2A368] shadow-md cursor-pointer"
             >
               {isCollapsed ? <ArrowRightOutlined /> : <ArrowLeftOutlined />}
             </button>
@@ -127,7 +127,7 @@ export default function Sidebar({
             />
             {!isCollapsed && (
               <span
-                className="font-bold text-lg text-white cursor-pointer"
+                className="font-bold text-lg text-[#C2A368] cursor-pointer"
                 onClick={() => router.push(getDashboardLink())}
               >
                 {sidebarHeading}

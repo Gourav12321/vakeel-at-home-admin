@@ -9,7 +9,7 @@ const Loader = () => {
           <LoadingOutlined
             style={{
               fontSize: 80,
-              color: "#FCD53F",
+              color: "#C2A368",
             }}
             spin
             size="large"

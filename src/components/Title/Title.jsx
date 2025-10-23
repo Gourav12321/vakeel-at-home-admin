@@ -16,7 +16,7 @@ const Title = ({ title, buttonText, destination, onButtonClick }) => {
 
   return (
     <div className="flex justify-between">
-      <h1 className="text-slate-800 text-xl" style={{ fontWeight: 600 }}>
+      <h1 className="text-[#2E2E2E] text-xl" style={{ fontWeight: 600 }}>
         {title}
       </h1>
 
