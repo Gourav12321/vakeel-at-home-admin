@@ -123,7 +123,7 @@ const Login = () => {
           level={3}
           style={{
             textAlign: "center",
-            color: "#366598",
+            color: "#1E3A5F",
             marginBottom: 24,
           }}
         >
@@ -173,9 +173,9 @@ const Login = () => {
               size="large"
               loading={loading}
               block
+              className="simple-button"
               style={{
                 borderRadius: 20,
-                background: "#366598",
               }}
             >
               Log In
