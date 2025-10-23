@@ -9,6 +9,8 @@ export const apiUrls = {
     getAllPublics: "/auth/publics",
     getAllClerks: "/auth/clerks",
     getById: "/auth",
+    getAllUsers: "/auth/all",
+    deleteUser: "/auth/delete/id",
   },
   lawyers: {
     getAllLawyers: "/lawyers",

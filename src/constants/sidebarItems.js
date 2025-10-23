@@ -43,6 +43,11 @@ export const adminSidebarItems = [
     icon: AppstoreOutlined,
   },
   {
+    name: "All Users",
+    link: "/admin/all",
+    icon: UserAddOutlined,
+  },
+  {
     name: "Lawyers",
     link: "/admin/lawyers-list",
     icon: UserOutlined,
