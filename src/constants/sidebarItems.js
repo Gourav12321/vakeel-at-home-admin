@@ -30,6 +30,7 @@ import {
   HistoryOutlined,
   SearchOutlined,
   UserAddOutlined,
+  GlobalOutlined,
 } from "@ant-design/icons";
 
 export const sidebarHeading = "VAKEEL AT HOME";
@@ -55,6 +56,11 @@ export const adminSidebarItems = [
     name: "Public",
     link: "/admin/public-list",
     icon: UserOutlined,
+  },
+  {
+    name: "Blogs",
+    link: "/admin/blogs",
+    icon: GlobalOutlined,
   },
   // {
   //   name: "Subscription Management",

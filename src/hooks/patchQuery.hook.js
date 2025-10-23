@@ -1,4 +1,4 @@
-import logger from "../utils/logger";
+import { logger } from "@/utils/logger";
 import apiClient from "../apis/apiClient";
 
 import { useState } from "react";

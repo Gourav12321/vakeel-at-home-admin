@@ -24,4 +24,9 @@ export const apiUrls = {
     hideComments: "posts/id/hide/id",
     hidePost: "posts/id/hide",
   },
+  blogs: {
+    getAllBlogs: "/blogs",
+    getBlogById: "/blogs/id",
+    verifyBlog: "/blogs/id/verify",
+  },
 };
