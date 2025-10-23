@@ -28,5 +28,6 @@ export const apiUrls = {
     getAllBlogs: "/blogs",
     getBlogById: "/blogs/id",
     verifyBlog: "/blogs/id/verify",
+    deleteBlog: "/blogs/id",
   },
 };

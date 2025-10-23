@@ -5,10 +5,11 @@ import toast from "react-hot-toast";
 import Title from "@/components/Title/Title";
 import useGetQuery from "@/hooks/getQuery.hook";
 import usePatchQuery from "@/hooks/patchQuery.hook";
+import useDeleteQuery from "@/hooks/deleteQuery.hook";
 import Loader from "@/components/Loader/Loader";
 import EnhancedTable from "@/components/Table/EnhancedTable";
 
-import { Select } from "antd";
+import { Select, Modal } from "antd";
 import { apiUrls } from "@/apis";
 import { useEffect, useState } from "react";
 import { useSearchParams, usePathname, useRouter } from "next/navigation";
@@ -20,10 +21,13 @@ const Blogs = () => {
 
   const { getQuery, loading } = useGetQuery();
   const { patchQuery, loading: toggleLoading } = usePatchQuery();
+  const { deleteQuery, loading: deleteLoading } = useDeleteQuery();
 
   const [tableData, setTableData] = useState([]);
   const [totalDocuments, setTotalDocuments] = useState(0);
   const [togglingId, setTogglingId] = useState(null);
+  const [deleteModalVisible, setDeleteModalVisible] = useState(false);
+  const [blogToDelete, setBlogToDelete] = useState(null);
 
   const page = parseInt(searchParams.get("page") || "1", 10);
   const limit = parseInt(searchParams.get("limit") || "10", 10);
@@ -74,6 +78,39 @@ const Blogs = () => {
         setTogglingId(null);
       },
     });
+  };
+
+  const handleDeleteClick = (blog) => {
+    setBlogToDelete(blog);
+    setDeleteModalVisible(true);
+  };
+
+  const handleDeleteConfirm = () => {
+    if (!blogToDelete) return;
+
+    deleteQuery({
+      url: `${apiUrls.blogs.deleteBlog.replace("/id", `/${blogToDelete._id}`)}`,
+      onSuccess: (response) => {
+        toast.success("Blog deleted successfully");
+        setTableData((prevData) =>
+          prevData.filter((item) => item._id !== blogToDelete._id)
+        );
+        setTotalDocuments((prev) => prev - 1);
+        setDeleteModalVisible(false);
+        setBlogToDelete(null);
+      },
+      onFail: (err) => {
+        console.log("Delete failed:", err);
+        toast.error("Failed to delete blog");
+        setDeleteModalVisible(false);
+        setBlogToDelete(null);
+      },
+    });
+  };
+
+  const handleDeleteCancel = () => {
+    setDeleteModalVisible(false);
+    setBlogToDelete(null);
   };
 
   const columns = [
@@ -167,6 +204,7 @@ const Blogs = () => {
             onView={(row) =>
               `/admin/blogs/${row._id}/?page=${page}&limit=${limit}`
             }
+            onDelete={handleDeleteClick}
             entryText={`Total Blogs: ${totalDocuments}`}
             currentPage={page}
             totalPages={Math.ceil(totalDocuments / limit)}
@@ -177,6 +215,36 @@ const Blogs = () => {
           />
         </div>
       )}
+
+      {/* Delete Confirmation Modal */}
+      <Modal
+        title="Delete Blog"
+        open={deleteModalVisible}
+        onOk={handleDeleteConfirm}
+        onCancel={handleDeleteCancel}
+        okText="Delete"
+        cancelText="Cancel"
+        okButtonProps={{
+          danger: true,
+          loading: deleteLoading,
+        }}
+        cancelButtonProps={{ disabled: deleteLoading }}
+      >
+        <div className="py-4">
+          <p className="text-gray-600 mb-4">
+            Are you sure you want to delete this blog? This action cannot be
+            undone.
+          </p>
+          {blogToDelete && (
+            <div className="bg-gray-50 p-3 rounded-lg">
+              <p className="font-medium text-gray-800">Blog Title:</p>
+              <p className="text-gray-600">{blogToDelete.title}</p>
+              <p className="font-medium text-gray-800 mt-2">Author:</p>
+              <p className="text-gray-600">{blogToDelete.authorName}</p>
+            </div>
+          )}
+        </div>
+      </Modal>
     </>
   );
 };
