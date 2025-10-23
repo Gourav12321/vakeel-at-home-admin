@@ -8,30 +8,16 @@ import {
   ShopOutlined,
   FileTextOutlined,
   FileSearchOutlined,
-  ProfileOutlined,
-  FileDoneOutlined,
-  QuestionCircleOutlined,
-  UserOutlined,
-  SettingOutlined,
-  BarChartOutlined,
-  TeamOutlined,
-  DollarOutlined,
-  FileProtectOutlined,
-  AuditOutlined,
-  BankOutlined,
-  CustomerServiceOutlined,
-  SafetyOutlined,
-  BookOutlined,
-  CalendarOutlined,
-  MessageOutlined,
-  StarOutlined,
-  HeartOutlined,
-  ShoppingCartOutlined,
-  HistoryOutlined,
-  SearchOutlined,
-  UserAddOutlined,
-  GlobalOutlined,
 } from "@ant-design/icons";
+import {
+  Camera,
+  ClipboardCheck,
+  LayoutDashboard,
+  Rss,
+  Scale,
+  User,
+  Users,
+} from "lucide-react";
 
 export const sidebarHeading = "VAKEEL AT HOME";
 
@@ -40,32 +26,32 @@ export const adminSidebarItems = [
   {
     name: "Dashboard",
     link: "/admin/dashboard",
-    icon: AppstoreOutlined,
+    icon: LayoutDashboard,
   },
   {
     name: "All Users",
     link: "/admin/all",
-    icon: UserAddOutlined,
+    icon: Users,
   },
   {
     name: "Lawyers",
     link: "/admin/lawyers-list",
-    icon: UserOutlined,
+    icon: Scale,
   },
   {
     name: "Clerks",
     link: "/admin/clerks-list",
-    icon: UserAddOutlined,
+    icon: Scale,
   },
   {
     name: "Public",
     link: "/admin/public-list",
-    icon: UserOutlined,
+    icon: User,
   },
   {
     name: "Blogs",
     link: "/admin/blogs",
-    icon: GlobalOutlined,
+    icon: Rss,
   },
   // {
   //   name: "Subscription Management",
@@ -85,12 +71,12 @@ export const adminSidebarItems = [
   {
     name: "Ask Me Anything",
     link: "/admin/ask-me-anything",
-    icon: ToolOutlined,
+    icon: ClipboardCheck,
   },
   {
     name: "VAH Gram",
     link: "/admin/vah-gram",
-    icon: HomeOutlined,
+    icon: Camera,
   },
   // {
   //   name: "Reviews Management",
