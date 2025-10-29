@@ -1,5 +1,5 @@
-export const apiBaseUrl = "http://localhost:5970/api/v1";
-// export const apiBaseUrl = "https://vakeel-at-home-server.vercel.app/api/v1";
+// export const apiBaseUrl = "http://localhost:5970/api/v1";
+export const apiBaseUrl = "http://13.60.62.223:5970/api/v1";
 
 export const apiUrls = {
   auth: {

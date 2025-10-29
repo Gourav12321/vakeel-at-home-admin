@@ -381,6 +381,26 @@ const LawyerDetailsPage = () => {
                     <Text type="secondary">Not provided</Text>
                   )}
                 </Descriptions.Item>
+                <Descriptions.Item label="Bar Council ID">
+                  {lawyerData.business_document ? (
+                    <Button
+                      type="link"
+                      size="small"
+                      icon={<EyeOutlined />}
+                      onClick={() =>
+                        handlePreviewDocument(
+                          lawyerData.business_document,
+                          "Bar Council ID Document"
+                        )
+                      }
+                      style={{ padding: 0 }}
+                    >
+                      Preview Document
+                    </Button>
+                  ) : (
+                    <Text type="secondary">Not provided</Text>
+                  )}
+                </Descriptions.Item>
                 <Descriptions.Item label="Device Type">
                   <Tag color="blue">{lawyerData.device_type || "Unknown"}</Tag>
                 </Descriptions.Item>
