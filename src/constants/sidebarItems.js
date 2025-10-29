@@ -17,6 +17,7 @@ import {
   Scale,
   User,
   Users,
+  Bell,
 } from "lucide-react";
 
 export const sidebarHeading = "VAKEEL AT HOME";
@@ -77,6 +78,11 @@ export const adminSidebarItems = [
     name: "VAH Gram",
     link: "/admin/vah-gram",
     icon: Camera,
+  },
+  {
+    name: "Send Notification",
+    link: "/admin/send-notification",
+    icon: Bell,
   },
   // {
   //   name: "Reviews Management",

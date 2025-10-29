@@ -21,6 +21,9 @@ const Login = () => {
   const router = useRouter();
 
   const [coords, setCoords] = useState({ latitude: null, longitude: null });
+  const [otpSent, setOtpSent] = useState(false);
+  const [mobileNumber, setMobileNumber] = useState("");
+  const [sendingOtp, setSendingOtp] = useState(false);
 
   // Get live coordinates once when component mounts
   useEffect(() => {
@@ -42,23 +45,43 @@ const Login = () => {
     }
   }, []);
 
+  const handleSendOtp = async () => {
+    try {
+      const values = await form.validateFields(["mobileNumber"]);
+      const mobileNumberValue = values.mobileNumber;
+
+      setSendingOtp(true);
+      postQuery({
+        url: apiUrls.auth.getOtp,
+        postData: { mobileNumber: `+91${mobileNumberValue}` },
+        onSuccess: (res) => {
+          setOtpSent(true);
+          setMobileNumber(mobileNumberValue);
+          toast.success("OTP sent successfully");
+          setSendingOtp(false);
+        },
+        onFail: (err) => {
+          console.error("Send OTP failed:", err);
+          setSendingOtp(false);
+        },
+      });
+    } catch (error) {
+      console.error("Validation failed:", error);
+      setSendingOtp(false);
+    }
+  };
+
   const handleLogin = (values) => {
     if (!coords.latitude || !coords.longitude) {
       toast.error("Unable to get your location. Please enable GPS.");
       return;
     }
 
-    // Validate OTP - only 123456 is allowed
-    if (values.otp !== "123456") {
-      toast.error("Invalid OTP. Please enter the correct OTP.");
-      return;
-    }
-
     // Add +91 prefix to mobile number
-    const mobileNumber = `+91${values.mobileNumber}`;
+    const mobileNumberWithPrefix = `+91${mobileNumber || values.mobileNumber}`;
 
     const payload = {
-      mobileNumber,
+      mobileNumber: mobileNumberWithPrefix,
       otp: values.otp,
       role: "admin",
       latitude: coords.latitude,
@@ -147,40 +170,68 @@ const Login = () => {
               size="large"
               placeholder="9699554545"
               maxLength={10}
-            />
-          </Form.Item>
-
-          <Form.Item
-            label="OTP"
-            name="otp"
-            rules={[
-              { required: true, message: "Please enter the OTP" },
-              { len: 6, message: "OTP must be 6 digits" },
-            ]}
-          >
-            <Input
-              prefix={<LockOutlined />}
-              size="large"
-              placeholder="123456"
-              maxLength={6}
-            />
-          </Form.Item>
-
-          <Form.Item>
-            <Button
-              type="primary"
-              htmlType="submit"
-              size="large"
-              loading={loading}
-              block
-              className="simple-button"
-              style={{
-                borderRadius: 20,
+              disabled={otpSent}
+              onChange={(e) => {
+                const value = e.target.value;
+                setMobileNumber(value);
               }}
-            >
-              Log In
-            </Button>
+            />
           </Form.Item>
+
+          {!otpSent && (
+            <Form.Item>
+              <Button
+                type="primary"
+                size="large"
+                loading={sendingOtp}
+                block
+                className="simple-button"
+                onClick={handleSendOtp}
+                style={{
+                  borderRadius: 20,
+                }}
+                disabled={!mobileNumber || mobileNumber.length !== 10}
+              >
+                Send OTP
+              </Button>
+            </Form.Item>
+          )}
+
+          {otpSent && (
+            <>
+              <Form.Item
+                label="OTP"
+                name="otp"
+                rules={[
+                  { required: true, message: "Please enter the OTP" },
+                  { len: 6, message: "OTP must be 6 digits" },
+                ]}
+              >
+                <Input
+                  prefix={<LockOutlined />}
+                  size="large"
+                  placeholder="Enter 6-digit OTP"
+                  maxLength={6}
+                />
+              </Form.Item>
+
+              <Form.Item>
+                <Button
+                  type="primary"
+                  htmlType="submit"
+                  size="large"
+                  loading={loading}
+                  block
+                  className="simple-button"
+                  style={{
+                    borderRadius: 20,
+                  }}
+                >
+                  Log In
+                </Button>
+              </Form.Item>
+            </>
+          )}
         </Form>
 
         <div style={{ textAlign: "center", marginTop: 16 }}>
