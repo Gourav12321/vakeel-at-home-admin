@@ -16,7 +16,12 @@ const apiInstance = () => {
     const tokens = getAuthTokens();
     const accessToken = tokens?.accessToken;
     config.xsrfCookieName = "token";
-    if (accessToken) {
+
+    // If access-token header is provided (e.g., from MSG91), use it
+    // Otherwise, use the stored access token
+    if (config.headers["access-token"]) {
+      // access-token header is already set, keep it
+    } else if (accessToken) {
       config.headers["authorization"] = `Bearer ${accessToken}`;
     }
     logger.log("REQUEST", config);
