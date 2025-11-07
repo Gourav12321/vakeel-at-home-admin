@@ -4,7 +4,7 @@ export const apiBaseUrl = "https://13-60-62-223.nip.io/api/v1";
 export const apiUrls = {
   auth: {
     getOtp: "/otp/send",
-    login: "/auth",
+    login: "/auth/admin",
     statistics: "/auth/statistics",
     toggleStatus: "/auth/toggle-profile-status",
     getAllPublics: "/auth/publics",
