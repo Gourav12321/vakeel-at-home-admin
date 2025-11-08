@@ -6,7 +6,7 @@ import usePostQuery from "@/hooks/postQuery.hook";
 import { apiUrls } from "@/apis";
 import { useDispatch } from "react-redux";
 import { useRouter } from "next/navigation";
-import { useEffect, useState, Fragment } from "react";
+import { Fragment } from "react";
 import { setUser } from "@/helpers/slices/userSlice";
 import { setAuthTokens, setUserData } from "@/utils/storage";
 import { Form, Input, Button, Typography } from "antd";
@@ -20,34 +20,7 @@ const Login = () => {
   const dispatch = useDispatch();
   const router = useRouter();
 
-  const [coords, setCoords] = useState({ latitude: null, longitude: null });
-
-  // Get live coordinates once when component mounts
-  useEffect(() => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (pos) => {
-          setCoords({
-            latitude: pos.coords.latitude,
-            longitude: pos.coords.longitude,
-          });
-        },
-        (err) => {
-          console.error("Location access denied:", err);
-          toast.error("Location access denied. Please enable location.");
-        }
-      );
-    } else {
-      toast.error("Geolocation not supported by your browser.");
-    }
-  }, []);
-
   const handleLogin = (values) => {
-    if (!coords.latitude || !coords.longitude) {
-      toast.error("Unable to get your location. Please enable GPS.");
-      return;
-    }
-
     // Add +91 prefix to mobile number
     const mobileNumberWithPrefix = `+91${values.mobileNumber}`;
 
@@ -55,8 +28,6 @@ const Login = () => {
       mobileNumber: mobileNumberWithPrefix,
       password: values.password,
       role: "admin",
-      latitude: coords.latitude,
-      longitude: coords.longitude,
     };
 
     postQuery({
@@ -178,12 +149,6 @@ const Login = () => {
               </Button>
             </Form.Item>
           </Form>
-
-          <div style={{ textAlign: "center", marginTop: 16 }}>
-            <Text type="secondary" style={{ fontSize: 13 }}>
-              Login automatically uses your live location
-            </Text>
-          </div>
         </div>
       </div>
     </Fragment>
