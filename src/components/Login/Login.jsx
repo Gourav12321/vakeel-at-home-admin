@@ -37,26 +37,19 @@ const Login = () => {
         "Content-Type": "application/json",
       },
       onSuccess: (res) => {
-        const { token } = res.user;
+        const { token, admin } = res;
 
         dispatch(
           setUser({
-            user: res.user,
+            user: admin,
             tokens: { accessToken: token },
           })
         );
 
         setAuthTokens({ accessToken: token });
-        setUserData(res.user);
+        setUserData(admin);
 
-        if (res.isNewUser) {
-          toast.success(
-            res.message ||
-              "Registration successful! Please update your profile."
-          );
-        } else {
-          toast.success("Login successful");
-        }
+        toast.success(res.message || "Login successful");
 
         router.push("/admin/dashboard");
       },
