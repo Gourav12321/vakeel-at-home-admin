@@ -21,7 +21,10 @@ import {
   Button,
   Space,
   Modal,
+  Typography,
 } from "antd";
+
+const { Text } = Typography;
 import Title from "@/components/Title/Title";
 import BackHeader from "@/components/BackHeader/BackHeader";
 
@@ -240,7 +243,7 @@ const ClerkDetail = () => {
         </Col>
 
         {/* Business Information */}
-        <Col xs={24} lg={12}>
+        {/* <Col xs={24} lg={12}>
           <Card title="Business Information" className="h-full">
             <Descriptions column={1} bordered>
               <Descriptions.Item label="Business Name">
@@ -264,10 +267,10 @@ const ClerkDetail = () => {
               </Descriptions.Item>
             </Descriptions>
           </Card>
-        </Col>
+        </Col> */}
 
         {/* Service Charges */}
-        <Col xs={24} lg={12}>
+        {/* <Col xs={24} lg={12}>
           <Card title="Service Charges" className="h-full">
             <Descriptions column={1} bordered>
               <Descriptions.Item label="Audio Call Charge">
@@ -284,7 +287,7 @@ const ClerkDetail = () => {
               </Descriptions.Item>
             </Descriptions>
           </Card>
-        </Col>
+        </Col> */}
 
         {/* Personal Details */}
         <Col xs={24} lg={12}>
@@ -333,12 +336,15 @@ const ClerkDetail = () => {
               <Descriptions.Item label="Device Type">
                 <Tag color="blue">{clerkData.device_type || "N/A"}</Tag>
               </Descriptions.Item>
+              <Descriptions.Item label="IP Address">
+                <Text strong>{clerkData.ipAddress || "Not provided"}</Text>
+              </Descriptions.Item>
             </Descriptions>
           </Card>
         </Col>
 
         {/* Banking Information */}
-        <Col xs={24} lg={12}>
+        {/* <Col xs={24} lg={12}>
           <Card title="Banking Information" className="h-full">
             <Descriptions column={1} bordered>
               <Descriptions.Item label="Bank Name">
@@ -358,7 +364,7 @@ const ClerkDetail = () => {
               </Descriptions.Item>
             </Descriptions>
           </Card>
-        </Col>
+        </Col> */}
 
         {/* Referral Information */}
         <Col xs={24} lg={12}>

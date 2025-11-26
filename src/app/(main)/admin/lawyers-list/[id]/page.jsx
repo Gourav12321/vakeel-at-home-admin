@@ -253,9 +253,14 @@ const LawyerDetailsPage = () => {
               title="User ID"
               className="h-full shadow-lg hover:shadow-xl transition-shadow text-center"
             >
-              <Text code className="text-sm">
-                {lawyerData._id || "N/A"}
-              </Text>
+              <Descriptions column={1} size="middle">
+                <Descriptions.Item label="User ID">
+                  <Text strong>{lawyerData._id || "Not provided"}</Text>
+                </Descriptions.Item>
+                <Descriptions.Item label="Ip Address">
+                  <Text strong>{lawyerData.ipAddress || "Not provided"}</Text>
+                </Descriptions.Item>
+              </Descriptions>
             </Card>
           </Col>
         </Row>
