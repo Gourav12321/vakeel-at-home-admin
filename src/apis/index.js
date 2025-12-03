@@ -1,5 +1,5 @@
-// export const apiBaseUrl = "http://localhost:5970/api/v1";
-export const apiBaseUrl = "https://13-60-62-223.nip.io/api/v1";
+export const apiBaseUrl = "http://localhost:5970/api/v1";
+// export const apiBaseUrl = "https://13-60-62-223.nip.io/api/v1";
 
 export const apiUrls = {
   auth: {
@@ -28,12 +28,36 @@ export const apiUrls = {
     hidePost: "posts/id/hide",
   },
   blogs: {
-    getAllBlogs: "/blogs",
+    getAllBlogs: "/blogs/admin",
     getBlogById: "/blogs/id",
     verifyBlog: "/blogs/id/verify",
     deleteBlog: "/blogs/id",
   },
   notifications: {
     sendNotification: "/notifications/send-bulk-notification",
+  },
+  banners: {
+    getAllBanners: "/banner",
+    createBanner: "/banner",
+    updateBanner: "/banner",
+    deleteBanner: "/banner",
+  },
+  feedback: {
+    getAllFeedback: "/feedback",
+    getFeedbackById: "/feedback/id",
+    createFeedback: "/feedback",
+    updateFeedback: "/feedback/id",
+    deleteFeedback: "/feedback/id",
+    getFeedbackByAuthor: "/feedback/author/id",
+  },
+  faqs: {
+    getAllFAQs: "/faqs",
+    getFAQById: "/faqs/id",
+    createFAQ: "/faqs",
+    updateFAQ: "/faqs/id",
+    deleteFAQ: "/faqs/id",
+  },
+  upload: {
+    uploadDocument: "/upload/document",
   },
 };

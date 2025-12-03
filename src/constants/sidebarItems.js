@@ -18,6 +18,9 @@ import {
   User,
   Users,
   Bell,
+  Image,
+  MessageSquare,
+  HelpCircle,
 } from "lucide-react";
 
 export const sidebarHeading = "VAKEEL AT HOME";
@@ -54,6 +57,11 @@ export const adminSidebarItems = [
     link: "/admin/blogs",
     icon: Rss,
   },
+  {
+    name: "Banners",
+    link: "/admin/banners",
+    icon: Image,
+  },
   // {
   //   name: "Subscription Management",
   //   link: "/admin/subscription-management",
@@ -83,6 +91,16 @@ export const adminSidebarItems = [
     name: "Send Notification",
     link: "/admin/send-notification",
     icon: Bell,
+  },
+  {
+    name: "Feedback",
+    link: "/admin/feedback",
+    icon: MessageSquare,
+  },
+  {
+    name: "FAQs",
+    link: "/admin/faqs",
+    icon: HelpCircle,
   },
   // {
   //   name: "Reviews Management",

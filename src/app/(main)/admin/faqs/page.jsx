@@ -4,51 +4,47 @@ import moment from "moment";
 import toast from "react-hot-toast";
 import Title from "@/components/Title/Title";
 import useGetQuery from "@/hooks/getQuery.hook";
-import usePutQuery from "@/hooks/putQuery.hook";
 import useDeleteQuery from "@/hooks/deleteQuery.hook";
 import Loader from "@/components/Loader/Loader";
 import EnhancedTable from "@/components/Table/EnhancedTable";
+import FAQForm from "@/components/FAQForm/FAQForm";
 
-import { Select, Modal } from "antd";
+import { Modal, Button } from "antd";
+import { PlusOutlined } from "@ant-design/icons";
 import { apiUrls } from "@/apis";
 import { useEffect, useState } from "react";
 import { useSearchParams, usePathname, useRouter } from "next/navigation";
 
-const Blogs = () => {
+const FAQs = () => {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
   const { getQuery, loading } = useGetQuery();
-  const { putQuery, loading: toggleLoading } = usePutQuery();
   const { deleteQuery, loading: deleteLoading } = useDeleteQuery();
 
   const [tableData, setTableData] = useState([]);
   const [totalDocuments, setTotalDocuments] = useState(0);
-  const [togglingId, setTogglingId] = useState(null);
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
-  const [blogToDelete, setBlogToDelete] = useState(null);
+  const [faqToDelete, setFaqToDelete] = useState(null);
+  const [formVisible, setFormVisible] = useState(false);
+  const [selectedFAQ, setSelectedFAQ] = useState(null);
 
   const page = parseInt(searchParams.get("page") || "1", 10);
   const limit = parseInt(searchParams.get("limit") || "10", 10);
 
   const fetchData = () => {
     getQuery({
-      url: `${apiUrls?.blogs?.getAllBlogs}?page=${page}&limit=${limit}`,
-
+      url: `${apiUrls?.faqs?.getAllFAQs}?page=${page}&limit=${limit}`,
       onSuccess: (response) => {
-        const dataList = Array.isArray(response?.data?.blogs)
-          ? response?.data?.blogs
-          : [];
-        setTotalDocuments(response.data.pagination.totalBlogs);
+        const dataList = Array.isArray(response?.faqs) ? response?.faqs : [];
+        setTotalDocuments(response.pagination?.totalFAQs || dataList.length);
 
         const mappedData = dataList.map((item) => ({
-          title: item?.title || "N/A",
-          authorName: item?.author?.fullName || "N/A",
-          email: item?.author?.email || "N/A",
+          question: item?.question || "N/A",
+          answer: item?.answer || "N/A",
           date: moment(item?.createdAt).format("DD-MM-YYYY") || "N/A",
           updatedAt: item?.updatedAt,
-          isVerified: item?.isVerified,
           _id: item?._id,
         }));
 
@@ -60,113 +56,72 @@ const Blogs = () => {
     });
   };
 
-  const handleToggleVerification = (blogId, currentStatus) => {
-    setTogglingId(blogId);
-    putQuery({
-      url: `${apiUrls.blogs.verifyBlog.replace("/id", `/${blogId}`)}`,
-      onSuccess: (response) => {
-        toast.success("Blog verification status updated successfully");
-        setTableData((prevData) =>
-          prevData.map((item) =>
-            item._id === blogId ? { ...item, isVerified: !currentStatus } : item
-          )
-        );
-        setTogglingId(null);
-      },
-      onFail: (err) => {
-        console.log("Toggle failed:", err);
-        toast.error("Failed to update verification status");
-        setTogglingId(null);
-      },
-    });
-  };
-
-  const handleDeleteClick = (blog) => {
-    setBlogToDelete(blog);
+  const handleDeleteClick = (faq) => {
+    setFaqToDelete(faq);
     setDeleteModalVisible(true);
   };
 
   const handleDeleteConfirm = () => {
-    if (!blogToDelete) return;
+    if (!faqToDelete) return;
 
     deleteQuery({
-      url: `${apiUrls.blogs.deleteBlog.replace("/id", `/${blogToDelete._id}`)}`,
+      url: `${apiUrls.faqs.deleteFAQ.replace("/id", `/${faqToDelete._id}`)}`,
       onSuccess: (response) => {
-        toast.success("Blog deleted successfully");
+        toast.success("FAQ deleted successfully");
         setTableData((prevData) =>
-          prevData.filter((item) => item._id !== blogToDelete._id)
+          prevData.filter((item) => item._id !== faqToDelete._id)
         );
         setTotalDocuments((prev) => prev - 1);
         setDeleteModalVisible(false);
-        setBlogToDelete(null);
+        setFaqToDelete(null);
       },
       onFail: (err) => {
         console.log("Delete failed:", err);
-        toast.error("Failed to delete blog");
+        toast.error("Failed to delete FAQ");
         setDeleteModalVisible(false);
-        setBlogToDelete(null);
+        setFaqToDelete(null);
       },
     });
   };
 
   const handleDeleteCancel = () => {
     setDeleteModalVisible(false);
-    setBlogToDelete(null);
+    setFaqToDelete(null);
+  };
+
+  const handleEditClick = (faq) => {
+    setSelectedFAQ(faq);
+    setFormVisible(true);
+  };
+
+  const handleCreateClick = () => {
+    setSelectedFAQ(null);
+    setFormVisible(true);
   };
 
   const columns = [
     {
-      Header: "Title",
-      accessor: "title",
-      width: 200,
+      Header: "Question",
+      accessor: "question",
+      width: 300,
+      Cell: (value) => (
+        <div className="line-clamp-2 text-sm">{value || "N/A"}</div>
+      ),
     },
     {
-      Header: "Author Name",
-      accessor: "authorName",
-      width: 150,
-    },
-    {
-      Header: "Email",
-      accessor: "email",
-      width: 180,
-    },
-    {
-      Header: "Verification Status",
-      accessor: "isVerified",
-      width: 180,
-      Cell: (value, record) => {
-        return (
-          <Select
-            value={value ? "verified" : "not_verified"}
-            onChange={(newValue) => {
-              handleToggleVerification(record._id, value);
-            }}
-            loading={togglingId === record._id}
-            disabled={togglingId === record._id}
-            style={{ width: "100%", minWidth: "160px" }}
-            size="small"
-            className="verification-status-select"
-          >
-            <Select.Option value="not_verified">
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 bg-red-500 rounded-full"></div>
-                <span>Not Verified</span>
-              </div>
-            </Select.Option>
-            <Select.Option value="verified">
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                <span>Verified</span>
-              </div>
-            </Select.Option>
-          </Select>
-        );
-      },
+      Header: "Answer Preview",
+      accessor: "answer",
+      width: 300,
+      Cell: (value) => (
+        <div className="line-clamp-2 text-sm text-gray-600">
+          {value ? value.substring(0, 80) + "..." : "N/A"}
+        </div>
+      ),
     },
     {
       Header: "Created",
       accessor: "date",
-      width: 100,
+      width: 120,
     },
   ];
 
@@ -189,7 +144,17 @@ const Blogs = () => {
 
   return (
     <>
-      <Title title={"Blogs List"} />
+      <div className="flex justify-between items-center mb-6">
+        <Title title={"FAQs Management"} />
+        <Button
+          type="primary"
+          icon={<PlusOutlined />}
+          onClick={handleCreateClick}
+          size="large"
+        >
+          Create FAQ
+        </Button>
+      </div>
 
       {loading ? (
         <div className="flex justify-center items-center h-64">
@@ -203,10 +168,13 @@ const Blogs = () => {
             showDate={true}
             showActions={true}
             onView={(row) =>
-              `/admin/blogs/${row._id}/?page=${page}&limit=${limit}`
+              `/admin/faqs/${row._id}/?page=${page}&limit=${limit}`
             }
+            onEdit={(row) => {
+              handleEditClick(row);
+            }}
             onDelete={handleDeleteClick}
-            entryText={`Total Blogs: ${totalDocuments}`}
+            entryText={`Total FAQs: ${totalDocuments}`}
             currentPage={page}
             totalPages={Math.ceil(totalDocuments / limit)}
             pageLimit={limit}
@@ -217,9 +185,17 @@ const Blogs = () => {
         </div>
       )}
 
+      {/* FAQ Form Modal */}
+      <FAQForm
+        visible={formVisible}
+        faq={selectedFAQ}
+        onClose={() => setFormVisible(false)}
+        onSuccess={() => fetchData()}
+      />
+
       {/* Delete Confirmation Modal */}
       <Modal
-        title="Delete Blog"
+        title="Delete FAQ"
         open={deleteModalVisible}
         onOk={handleDeleteConfirm}
         onCancel={handleDeleteCancel}
@@ -233,15 +209,15 @@ const Blogs = () => {
       >
         <div className="py-4">
           <p className="text-gray-600 mb-4">
-            Are you sure you want to delete this blog? This action cannot be
+            Are you sure you want to delete this FAQ? This action cannot be
             undone.
           </p>
-          {blogToDelete && (
+          {faqToDelete && (
             <div className="bg-gray-50 p-3 rounded-lg">
-              <p className="font-medium text-gray-800">Blog Title:</p>
-              <p className="text-gray-600">{blogToDelete.title}</p>
-              <p className="font-medium text-gray-800 mt-2">Author:</p>
-              <p className="text-gray-600">{blogToDelete.authorName}</p>
+              <p className="font-medium text-gray-800">Question:</p>
+              <p className="text-gray-600 line-clamp-2">
+                {faqToDelete.question}
+              </p>
             </div>
           )}
         </div>
@@ -250,4 +226,4 @@ const Blogs = () => {
   );
 };
 
-export default Blogs;
+export default FAQs;

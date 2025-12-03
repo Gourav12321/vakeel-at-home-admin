@@ -4,7 +4,8 @@ import moment from "moment";
 import toast from "react-hot-toast";
 import Title from "@/components/Title/Title";
 import useGetQuery from "@/hooks/getQuery.hook";
-import usePatchQuery from "@/hooks/patchQuery.hook";
+// import usePatchQuery from "@/hooks/patchQuery.hook";
+import usePutQuery from "@/hooks/putQuery.hook";
 import Loader from "@/components/Loader/Loader";
 
 import { Card, Button, Tag, Space, Typography, Image, Divider } from "antd";
@@ -27,7 +28,7 @@ const BlogDetail = ({ params }) => {
   const searchParams = useSearchParams();
 
   const { getQuery, loading } = useGetQuery();
-  const { patchQuery, loading: toggleLoading } = usePatchQuery();
+  const { putQuery, loading: toggleLoading } = usePutQuery();
 
   const [blogData, setBlogData] = useState(null);
   const [toggling, setToggling] = useState(false);
@@ -49,7 +50,7 @@ const BlogDetail = ({ params }) => {
 
   const handleToggleVerification = () => {
     setToggling(true);
-    patchQuery({
+    putQuery({
       url: `${apiUrls.blogs.verifyBlog.replace("/id", `/${blogId}`)}`,
       onSuccess: (response) => {
         toast.success("Blog verification status updated successfully");

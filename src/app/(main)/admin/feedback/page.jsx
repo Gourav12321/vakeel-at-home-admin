@@ -4,51 +4,55 @@ import moment from "moment";
 import toast from "react-hot-toast";
 import Title from "@/components/Title/Title";
 import useGetQuery from "@/hooks/getQuery.hook";
-import usePutQuery from "@/hooks/putQuery.hook";
 import useDeleteQuery from "@/hooks/deleteQuery.hook";
+import usePutQuery from "@/hooks/putQuery.hook";
 import Loader from "@/components/Loader/Loader";
 import EnhancedTable from "@/components/Table/EnhancedTable";
 
-import { Select, Modal } from "antd";
+import { Modal, Rate, Tag, Select, Spin } from "antd";
 import { apiUrls } from "@/apis";
 import { useEffect, useState } from "react";
 import { useSearchParams, usePathname, useRouter } from "next/navigation";
 
-const Blogs = () => {
+const Feedback = () => {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
   const { getQuery, loading } = useGetQuery();
-  const { putQuery, loading: toggleLoading } = usePutQuery();
   const { deleteQuery, loading: deleteLoading } = useDeleteQuery();
+  const { putQuery, loading: updateLoading } = usePutQuery();
 
   const [tableData, setTableData] = useState([]);
   const [totalDocuments, setTotalDocuments] = useState(0);
-  const [togglingId, setTogglingId] = useState(null);
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
-  const [blogToDelete, setBlogToDelete] = useState(null);
+  const [feedbackToDelete, setFeedbackToDelete] = useState(null);
+  const [updatingId, setUpdatingId] = useState(null);
 
   const page = parseInt(searchParams.get("page") || "1", 10);
   const limit = parseInt(searchParams.get("limit") || "10", 10);
 
   const fetchData = () => {
     getQuery({
-      url: `${apiUrls?.blogs?.getAllBlogs}?page=${page}&limit=${limit}`,
+      url: `${apiUrls?.feedback?.getAllFeedback}?page=${page}&limit=${limit}`,
 
       onSuccess: (response) => {
-        const dataList = Array.isArray(response?.data?.blogs)
-          ? response?.data?.blogs
+        const dataList = Array.isArray(response?.data?.feedback)
+          ? response?.data?.feedback
           : [];
-        setTotalDocuments(response.data.pagination.totalBlogs);
+        setTotalDocuments(response.data.pagination.totalFeedback);
 
         const mappedData = dataList.map((item) => ({
           title: item?.title || "N/A",
+          description: item?.description || "N/A",
+          rating: item?.rating || "N/A",
+          isRealAndClient: item?.isRealAndClient || false,
           authorName: item?.author?.fullName || "N/A",
           email: item?.author?.email || "N/A",
           date: moment(item?.createdAt).format("DD-MM-YYYY") || "N/A",
-          updatedAt: item?.updatedAt,
-          isVerified: item?.isVerified,
+          createdAt: item?.createdAt,
+          updatedAt:
+            moment(item?.updatedAt).format("DD-MM-YYYY HH:mm") || "N/A",
           _id: item?._id,
         }));
 
@@ -56,69 +60,116 @@ const Blogs = () => {
       },
       onFail: (err) => {
         console.log(err);
+        toast.error("Failed to fetch feedback");
       },
     });
   };
 
-  const handleToggleVerification = (blogId, currentStatus) => {
-    setTogglingId(blogId);
-    putQuery({
-      url: `${apiUrls.blogs.verifyBlog.replace("/id", `/${blogId}`)}`,
-      onSuccess: (response) => {
-        toast.success("Blog verification status updated successfully");
-        setTableData((prevData) =>
-          prevData.map((item) =>
-            item._id === blogId ? { ...item, isVerified: !currentStatus } : item
-          )
-        );
-        setTogglingId(null);
-      },
-      onFail: (err) => {
-        console.log("Toggle failed:", err);
-        toast.error("Failed to update verification status");
-        setTogglingId(null);
-      },
-    });
-  };
-
-  const handleDeleteClick = (blog) => {
-    setBlogToDelete(blog);
+  const handleDeleteClick = (feedback) => {
+    setFeedbackToDelete(feedback);
     setDeleteModalVisible(true);
   };
 
   const handleDeleteConfirm = () => {
-    if (!blogToDelete) return;
+    if (!feedbackToDelete) return;
 
     deleteQuery({
-      url: `${apiUrls.blogs.deleteBlog.replace("/id", `/${blogToDelete._id}`)}`,
+      url: `${apiUrls.feedback.deleteFeedback.replace(
+        "/id",
+        `/${feedbackToDelete._id}`
+      )}`,
       onSuccess: (response) => {
-        toast.success("Blog deleted successfully");
+        toast.success("Feedback deleted successfully");
         setTableData((prevData) =>
-          prevData.filter((item) => item._id !== blogToDelete._id)
+          prevData.filter((item) => item._id !== feedbackToDelete._id)
         );
         setTotalDocuments((prev) => prev - 1);
         setDeleteModalVisible(false);
-        setBlogToDelete(null);
+        setFeedbackToDelete(null);
       },
       onFail: (err) => {
         console.log("Delete failed:", err);
-        toast.error("Failed to delete blog");
+        toast.error("Failed to delete feedback");
         setDeleteModalVisible(false);
-        setBlogToDelete(null);
+        setFeedbackToDelete(null);
       },
     });
   };
 
   const handleDeleteCancel = () => {
     setDeleteModalVisible(false);
-    setBlogToDelete(null);
+    setFeedbackToDelete(null);
+  };
+
+  const handleRealClientChange = (feedbackId, value) => {
+    setUpdatingId(feedbackId);
+    putQuery({
+      url: `/feedback/mark-realclient/${feedbackId}`,
+      body: {
+        isRealAndClient: value,
+      },
+      onSuccess: (response) => {
+        toast.success("Status updated successfully");
+        setTableData((prevData) =>
+          prevData.map((item) =>
+            item._id === feedbackId ? { ...item, isRealAndClient: value } : item
+          )
+        );
+        setUpdatingId(null);
+      },
+      onFail: (err) => {
+        console.log("Update failed:", err);
+        toast.error("Failed to update status");
+        setUpdatingId(null);
+      },
+    });
   };
 
   const columns = [
     {
       Header: "Title",
       accessor: "title",
-      width: 200,
+      width: 150,
+    },
+    {
+      Header: "Description",
+      accessor: "description",
+      width: 250,
+    },
+    {
+      Header: "Rating",
+      accessor: "rating",
+      width: 80,
+      render: (value) => (
+        <div className="whitespace-nowrap">
+          <Rate disabled defaultValue={value} />
+        </div>
+      ),
+    },
+    {
+      Header: "Real Client",
+      accessor: "isRealAndClient",
+      width: 150,
+      render: (value, row) => (
+        <div className="flex items-center gap-2">
+          {updatingId === row._id ? (
+            <Spin size="small" />
+          ) : (
+            <Select
+              value={value ? "true" : "false"}
+              onChange={(val) =>
+                handleRealClientChange(row._id, val === "true")
+              }
+              disabled={updatingId !== null}
+              style={{ width: "100%" }}
+              size="small"
+            >
+              <Select.Option value="true">Yes</Select.Option>
+              <Select.Option value="false">No</Select.Option>
+            </Select>
+          )}
+        </div>
+      ),
     },
     {
       Header: "Author Name",
@@ -128,45 +179,12 @@ const Blogs = () => {
     {
       Header: "Email",
       accessor: "email",
-      width: 180,
-    },
-    {
-      Header: "Verification Status",
-      accessor: "isVerified",
-      width: 180,
-      Cell: (value, record) => {
-        return (
-          <Select
-            value={value ? "verified" : "not_verified"}
-            onChange={(newValue) => {
-              handleToggleVerification(record._id, value);
-            }}
-            loading={togglingId === record._id}
-            disabled={togglingId === record._id}
-            style={{ width: "100%", minWidth: "160px" }}
-            size="small"
-            className="verification-status-select"
-          >
-            <Select.Option value="not_verified">
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 bg-red-500 rounded-full"></div>
-                <span>Not Verified</span>
-              </div>
-            </Select.Option>
-            <Select.Option value="verified">
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                <span>Verified</span>
-              </div>
-            </Select.Option>
-          </Select>
-        );
-      },
+      width: 200,
     },
     {
       Header: "Created",
       accessor: "date",
-      width: 100,
+      width: 120,
     },
   ];
 
@@ -189,7 +207,7 @@ const Blogs = () => {
 
   return (
     <>
-      <Title title={"Blogs List"} />
+      <Title title={"Feedback List"} />
 
       {loading ? (
         <div className="flex justify-center items-center h-64">
@@ -203,10 +221,10 @@ const Blogs = () => {
             showDate={true}
             showActions={true}
             onView={(row) =>
-              `/admin/blogs/${row._id}/?page=${page}&limit=${limit}`
+              `/admin/feedback/${row._id}/?page=${page}&limit=${limit}`
             }
             onDelete={handleDeleteClick}
-            entryText={`Total Blogs: ${totalDocuments}`}
+            entryText={`Total Feedback: ${totalDocuments}`}
             currentPage={page}
             totalPages={Math.ceil(totalDocuments / limit)}
             pageLimit={limit}
@@ -219,7 +237,7 @@ const Blogs = () => {
 
       {/* Delete Confirmation Modal */}
       <Modal
-        title="Delete Blog"
+        title="Delete Feedback"
         open={deleteModalVisible}
         onOk={handleDeleteConfirm}
         onCancel={handleDeleteCancel}
@@ -233,15 +251,15 @@ const Blogs = () => {
       >
         <div className="py-4">
           <p className="text-gray-600 mb-4">
-            Are you sure you want to delete this blog? This action cannot be
+            Are you sure you want to delete this feedback? This action cannot be
             undone.
           </p>
-          {blogToDelete && (
+          {feedbackToDelete && (
             <div className="bg-gray-50 p-3 rounded-lg">
-              <p className="font-medium text-gray-800">Blog Title:</p>
-              <p className="text-gray-600">{blogToDelete.title}</p>
+              <p className="font-medium text-gray-800">Feedback Title:</p>
+              <p className="text-gray-600">{feedbackToDelete.title}</p>
               <p className="font-medium text-gray-800 mt-2">Author:</p>
-              <p className="text-gray-600">{blogToDelete.authorName}</p>
+              <p className="text-gray-600">{feedbackToDelete.authorName}</p>
             </div>
           )}
         </div>
@@ -250,4 +268,4 @@ const Blogs = () => {
   );
 };
 
-export default Blogs;
+export default Feedback;
