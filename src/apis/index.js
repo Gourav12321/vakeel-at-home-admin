@@ -1,5 +1,5 @@
-export const apiBaseUrl = "http://localhost:5970/api/v1";
-// export const apiBaseUrl = "https://13-60-62-223.nip.io/api/v1";
+// export const apiBaseUrl = "http://localhost:5970/api/v1";
+export const apiBaseUrl = "https://13-60-62-223.nip.io/api/v1";
 
 export const apiUrls = {
   auth: {
