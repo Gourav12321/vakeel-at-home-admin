@@ -44,9 +44,20 @@ const usePostQuery = () => {
       console.log("PostData type:", typeof postData);
       console.log("Is FormData:", postData instanceof FormData);
 
-      const { data: apiData = {} } = await apiClient.post(url, postData, {
+      const config = {
         headers: requestHeaders,
-      });
+      };
+
+      // For FormData, explicitly delete Content-Type to let browser set it
+      if (isFormData && config.headers["Content-Type"]) {
+        delete config.headers["Content-Type"];
+      }
+
+      const { data: apiData = {} } = await apiClient.post(
+        url,
+        postData,
+        config
+      );
       setData(apiData);
       await onSuccess(apiData);
       logger.log(apiData, "postQuery-success");

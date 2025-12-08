@@ -5,6 +5,7 @@ import toast from "react-hot-toast";
 import Title from "@/components/Title/Title";
 import useGetQuery from "@/hooks/getQuery.hook";
 import usePutQuery from "@/hooks/putQuery.hook";
+import useDeleteQuery from "@/hooks/deleteQuery.hook";
 import Loader from "@/components/Loader/Loader";
 import EnhancedTable from "@/components/Table/EnhancedTable";
 
@@ -20,10 +21,12 @@ const Lawyers = () => {
 
   const { getQuery, loading } = useGetQuery();
   const { putQuery, loading: toggleLoading } = usePutQuery();
+  const { deleteQuery, loading: deleteLoading } = useDeleteQuery();
 
   const [tableData, setTableData] = useState([]);
   const [totalDocuments, setTotalDocuments] = useState(0);
   const [togglingId, setTogglingId] = useState(null);
+  const [deletingId, setDeletingId] = useState(null);
 
   const page = parseInt(searchParams.get("page") || "1", 10);
   const limit = parseInt(searchParams.get("limit") || "10", 10);
@@ -79,6 +82,34 @@ const Lawyers = () => {
     });
   };
 
+  const handleDelete = ({ lawyerId }) => {
+    if (window.confirm(`Are you sure you want to delete this lawyer?`)) {
+      setDeletingId(lawyerId);
+      deleteQuery({
+        url: `${apiUrls.auth.deleteUser}/${lawyerId}`,
+        onSuccess: (response) => {
+          toast.success("Lawyer deleted successfully");
+          setTableData((prevData) =>
+            prevData.filter((item) => item._id !== lawyerId)
+          );
+          setTotalDocuments((prev) => prev - 1);
+          setDeletingId(null);
+        },
+        onFail: (err) => {
+          console.log("Delete failed:", err);
+          toast.error("Failed to delete lawyer");
+          setDeletingId(null);
+        },
+      });
+    }
+  };
+
+  const handleEdit = (row) => {
+    router.push(
+      `/admin/lawyers-list/${row._id}/edit?page=${page}&limit=${limit}`
+    );
+  };
+
   const columns = [
     {
       Header: "Full Name",
@@ -120,13 +151,13 @@ const Lawyers = () => {
             <Select.Option value="not_updated">
               <div className="flex items-center gap-2">
                 <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
-                <span>Not Updated</span>
+                <span>Not Verified</span>
               </div>
             </Select.Option>
             <Select.Option value="updated">
               <div className="flex items-center gap-2">
                 <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                <span>Updated</span>
+                <span>Verified</span>
               </div>
             </Select.Option>
           </Select>
@@ -179,6 +210,9 @@ const Lawyers = () => {
             onView={(row) =>
               `/admin/lawyers-list/${row._id}/?page=${page}&limit=${limit}`
             }
+            onEdit={handleEdit}
+            onDelete={(row) => handleDelete({ lawyerId: row._id })}
+            deletingId={deletingId}
             entryText={`Total Requests: ${totalDocuments}`}
             currentPage={page}
             totalPages={Math.ceil(totalDocuments / limit)}

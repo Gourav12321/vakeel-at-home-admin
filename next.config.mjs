@@ -17,6 +17,36 @@ const nextConfig = {
     ],
   },
 
+  // Add rewrites to proxy API requests and avoid CORS
+  async rewrites() {
+    return [
+      {
+        source: "/api/v1/:path*",
+        destination: "http://localhost:5970/api/v1/:path*",
+      },
+    ];
+  },
+
+  // Add headers to handle CORS
+  async headers() {
+    return [
+      {
+        source: "/api/v1/:path*",
+        headers: [
+          { key: "Access-Control-Allow-Origin", value: "*" },
+          {
+            key: "Access-Control-Allow-Methods",
+            value: "GET, POST, PUT, DELETE, OPTIONS",
+          },
+          {
+            key: "Access-Control-Allow-Headers",
+            value: "Content-Type, Authorization",
+          },
+        ],
+      },
+    ];
+  },
+
   webpack(config) {
     // Remove Next's default handling of .svg as files
     config.module.rules = config.module.rules.map((rule) => {

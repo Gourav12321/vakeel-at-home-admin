@@ -8,6 +8,12 @@ import { getAuthTokens } from "@/utils/storage";
 const apiInstance = () => {
   const api = axios.create({
     baseURL: apiBaseUrl,
+    // Don't set default Content-Type here - let requests set it based on data type
+    headers: {
+      // Content-Type will be set by request interceptor based on data type
+    },
+    // Add withCredentials if you need cookies
+    withCredentials: false,
   });
 
   axiosRetry(api, { retries: 3 });
@@ -15,7 +21,6 @@ const apiInstance = () => {
   api.interceptors.request.use(async (config) => {
     const tokens = getAuthTokens();
     const accessToken = tokens?.accessToken;
-    config.xsrfCookieName = "token";
 
     // If access-token header is provided (e.g., from MSG91), use it
     // Otherwise, use the stored access token
@@ -24,6 +29,13 @@ const apiInstance = () => {
     } else if (accessToken) {
       config.headers["authorization"] = `Bearer ${accessToken}`;
     }
+
+    // Don't set Content-Type for FormData - let browser set it with boundary
+    // Only set JSON Content-Type for non-FormData requests
+    if (!(config.data instanceof FormData) && !config.headers["Content-Type"]) {
+      config.headers["Content-Type"] = "application/json";
+    }
+
     logger.log("REQUEST", config);
     return config;
   });

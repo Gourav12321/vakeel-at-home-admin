@@ -5,6 +5,7 @@ import toast from "react-hot-toast";
 import Title from "@/components/Title/Title";
 import useGetQuery from "@/hooks/getQuery.hook";
 import usePutQuery from "@/hooks/putQuery.hook";
+import useDeleteQuery from "@/hooks/deleteQuery.hook";
 import Loader from "@/components/Loader/Loader";
 import EnhancedTable from "@/components/Table/EnhancedTable";
 
@@ -20,10 +21,12 @@ const Clerks = () => {
 
   const { getQuery, loading } = useGetQuery();
   const { putQuery, loading: toggleLoading } = usePutQuery();
+  const { deleteQuery, loading: deleteLoading } = useDeleteQuery();
 
   const [tableData, setTableData] = useState([]);
   const [totalDocuments, setTotalDocuments] = useState(0);
   const [togglingId, setTogglingId] = useState(null);
+  const [deletingId, setDeletingId] = useState(null);
 
   const page = parseInt(searchParams.get("page") || "1", 10);
   const limit = parseInt(searchParams.get("limit") || "10", 10);
@@ -79,6 +82,34 @@ const Clerks = () => {
     });
   };
 
+  const handleDelete = (clerkId) => {
+    if (window.confirm("Are you sure you want to delete this clerk?")) {
+      setDeletingId(clerkId);
+      deleteQuery({
+        url: `${apiUrls.auth.deleteUser}/${clerkId}`,
+        onSuccess: (response) => {
+          toast.success("Clerk deleted successfully");
+          setTableData((prevData) =>
+            prevData.filter((item) => item._id !== clerkId)
+          );
+          setTotalDocuments((prev) => prev - 1);
+          setDeletingId(null);
+        },
+        onFail: (err) => {
+          console.log("Delete failed:", err);
+          toast.error("Failed to delete clerk");
+          setDeletingId(null);
+        },
+      });
+    }
+  };
+
+  const handleEdit = (row) => {
+    router.push(
+      `/admin/clerks-list/${row._id}/edit?page=${page}&limit=${limit}`
+    );
+  };
+
   const columns = [
     {
       Header: "Full Name",
@@ -95,44 +126,44 @@ const Clerks = () => {
       accessor: "email",
       width: 180,
     },
-    {
-      Header: "Experience",
-      accessor: "experience",
-      width: 100,
-    },
-    {
-      Header: "Update Profile",
-      accessor: "isProfileUpdated",
-      width: 160,
-      Cell: (value, record) => {
-        return (
-          <Select
-            value={value ? "updated" : "not_updated"}
-            onChange={(newValue) => {
-              handleToggleStatus(record._id, value);
-            }}
-            loading={togglingId === record._id}
-            disabled={togglingId === record._id}
-            style={{ width: "100%", minWidth: "140px" }}
-            size="small"
-            className="profile-status-select"
-          >
-            <Select.Option value="not_updated">
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
-                <span>Not Updated</span>
-              </div>
-            </Select.Option>
-            <Select.Option value="updated">
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                <span>Updated</span>
-              </div>
-            </Select.Option>
-          </Select>
-        );
-      },
-    },
+    // {
+    //   Header: "Experience",
+    //   accessor: "experience",
+    //   width: 100,
+    // },
+    // {
+    //   Header: "Update Profile",
+    //   accessor: "isProfileUpdated",
+    //   width: 160,
+    //   Cell: (value, record) => {
+    //     return (
+    //       <Select
+    //         value={value ? "updated" : "not_updated"}
+    //         onChange={(newValue) => {
+    //           handleToggleStatus(record._id, value);
+    //         }}
+    //         loading={togglingId === record._id}
+    //         disabled={togglingId === record._id}
+    //         style={{ width: "100%", minWidth: "140px" }}
+    //         size="small"
+    //         className="profile-status-select"
+    //       >
+    //         <Select.Option value="not_updated">
+    //           <div className="flex items-center gap-2">
+    //             <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
+    //             <span>Not Updated</span>
+    //           </div>
+    //         </Select.Option>
+    //         <Select.Option value="updated">
+    //           <div className="flex items-center gap-2">
+    //             <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+    //             <span>Updated</span>
+    //           </div>
+    //         </Select.Option>
+    //       </Select>
+    //     );
+    //   },
+    // },
     {
       Header: "Created",
       accessor: "date",
@@ -175,6 +206,9 @@ const Clerks = () => {
             onView={(row) =>
               `/admin/clerks-list/${row._id}/?page=${page}&limit=${limit}`
             }
+            onEdit={handleEdit}
+            onDelete={handleDelete}
+            deletingId={deletingId}
             entryText={`Total Clerks: ${totalDocuments}`}
             currentPage={page}
             totalPages={Math.ceil(totalDocuments / limit)}

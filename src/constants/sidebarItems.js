@@ -21,6 +21,7 @@ import {
   Image,
   MessageSquare,
   HelpCircle,
+  Star,
 } from "lucide-react";
 
 export const sidebarHeading = "VAKEEL AT HOME";
@@ -62,6 +63,11 @@ export const adminSidebarItems = [
     link: "/admin/banners",
     icon: Image,
   },
+  {
+    name: "Categories",
+    link: "/admin/categories",
+    icon: AppstoreOutlined,
+  },
   // {
   //   name: "Subscription Management",
   //   link: "/admin/subscription-management",
@@ -96,6 +102,11 @@ export const adminSidebarItems = [
     name: "Feedback",
     link: "/admin/feedback",
     icon: MessageSquare,
+  },
+  {
+    name: "Lawyer Ratings",
+    link: "/admin/lawyer-ratings",
+    icon: Star,
   },
   {
     name: "FAQs",

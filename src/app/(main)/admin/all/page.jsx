@@ -67,7 +67,7 @@ const AllUsers = () => {
     if (!userToDelete) return;
 
     deleteQuery({
-      url: `${apiUrls.auth.deleteUser.replace("/id", `/${userToDelete._id}`)}`,
+      url: `${apiUrls.auth.deleteUser}/${userToDelete._id}`,
       onSuccess: (response) => {
         toast.success("User deleted successfully");
         setTableData((prevData) =>
