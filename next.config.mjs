@@ -47,6 +47,9 @@ const nextConfig = {
     ];
   },
 
+  // Turbopack configuration (empty for now, but required to silence the error)
+  turbopack: {},
+
   webpack(config) {
     // Remove Next's default handling of .svg as files
     config.module.rules = config.module.rules.map((rule) => {
