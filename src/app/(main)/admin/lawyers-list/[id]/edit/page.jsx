@@ -8,7 +8,8 @@ import Loader from "@/components/Loader/Loader";
 import UserEditForm from "@/components/UserEditForm/UserEditForm";
 import useGetQuery from "@/hooks/getQuery.hook";
 import usePutQuery from "@/hooks/putQuery.hook";
-import { apiUrls } from "@/apis";
+import { apiBaseUrl, apiUrls } from "@/apis";
+import axios from "axios";
 
 const EditLawyerPage = () => {
   const router = useRouter();
@@ -36,6 +37,7 @@ const EditLawyerPage = () => {
   const fetchLawyerData = () => {
     getQuery({
       url: `${apiUrls.lawyers.getLawyerById}/${lawyerId}`,
+
       onSuccess: (response) => {
         setLawyerData(response.data.lawyer);
       },
@@ -47,17 +49,18 @@ const EditLawyerPage = () => {
     });
   };
 
-  const fetchLawyerServices = () => {
-    getQuery({
-      url: `${apiUrls.service.getLawyerServices}/${lawyerId}`,
-      onSuccess: (response) => {
-        setLawyerServices(response.data?.services || []);
-      },
-      onFail: (err) => {
-        console.error("Failed to fetch lawyer services:", err);
-        // Don't show error toast for services as it's optional data
-      },
-    });
+  const fetchLawyerServices = async () => {
+    const url = `${apiBaseUrl}${apiUrls.service.getLawyerServices}/${lawyerId}`;
+    try {
+      const response = await axios.get(url, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("authToken")}`,
+        },
+      });
+      setLawyerServices(response.data?.services || []);
+    } catch (err) {
+      console.error("Failed to fetch lawyer services:", err);
+    }
   };
 
   const handleSave = (formData) => {

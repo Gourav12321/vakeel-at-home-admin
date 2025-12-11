@@ -39,6 +39,7 @@ const LawyerDetailsPage = () => {
   const lawyerId = params.id;
   const { getQuery, loading } = useGetQuery();
   const [lawyerData, setLawyerData] = useState(null);
+  const [services, setServices] = useState([]);
   const [modalVisible, setModalVisible] = useState(false);
   const [modalTitle, setModalTitle] = useState("");
   const [modalUrl, setModalUrl] = useState("");
@@ -49,7 +50,10 @@ const LawyerDetailsPage = () => {
         url: `${apiUrls.lawyers.getLawyerById}/${lawyerId}`,
         onSuccess: (response) => {
           console.log("Lawyer data:", response);
-          setLawyerData(response.data?.lawyer || response.data || response);
+          // API returns { data: { lawyer, services } }
+          const respData = response.data || response;
+          setLawyerData(respData?.lawyer || respData);
+          setServices(respData?.services || []);
         },
         onFail: (err) => {
           console.error("Failed to fetch lawyer data:", err);
@@ -183,13 +187,26 @@ const LawyerDetailsPage = () => {
             >
               {lawyerData.category && lawyerData.category.length > 0 ? (
                 <div className="space-y-2">
-                  {lawyerData.category.map((cat, index) => (
-                    <Tag key={index} color="blue" className="mb-2">
-                      {cat
-                        .replace("_", " ")
-                        .replace(/\b\w/g, (l) => l.toUpperCase())}
-                    </Tag>
-                  ))}
+                  {/* Prefer structured category objects if available */}
+                  {lawyerData.category && lawyerData.category.length > 0
+                    ? lawyerData.category.map((c) => (
+                        <Tag
+                          key={c._id || c.category}
+                          color="blue"
+                          className="mb-2"
+                        >
+                          {(c.category || "")
+                            .replace("_", " ")
+                            .replace(/\b\w/g, (l) => l.toUpperCase())}
+                        </Tag>
+                      ))
+                    : lawyerData.category_name.map((cat, index) => (
+                        <Tag key={index} color="blue" className="mb-2">
+                          {cat
+                            .replace("_", " ")
+                            .replace(/\b\w/g, (l) => l.toUpperCase())}
+                        </Tag>
+                      ))}
                 </div>
               ) : (
                 <Text type="secondary">No categories assigned</Text>
@@ -217,6 +234,74 @@ const LawyerDetailsPage = () => {
                 </div>
               ) : (
                 <Text type="secondary">No languages specified</Text>
+              )}
+            </Card>
+          </Col>
+        </Row>
+
+        {/* Services */}
+        <Row gutter={[16, 16]} className="mb-6">
+          <Col xs={24}>
+            <Card
+              title={
+                <Space>
+                  <BookOutlined className="text-green-500" />
+                  <span>Services</span>
+                </Space>
+              }
+              className="h-full shadow-lg hover:shadow-xl transition-shadow"
+            >
+              {services && services.length > 0 ? (
+                <div className="space-y-3">
+                  {services.map((s) => (
+                    <Card key={s._id} type="inner">
+                      <div className="flex flex-col md:flex-row md:items-center md:justify-between">
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <Tag color="purple">
+                              {(s.category || "").replace(/_/g, " ")}
+                            </Tag>
+                            <Text strong className="ml-2">
+                              {s.sub_category
+                                ? s.sub_category.replace(/_/g, " ")
+                                : s.category}
+                            </Text>
+                          </div>
+                          <div className="mt-1 text-sm text-gray-600">
+                            {s.offer_price !== undefined ? (
+                              <span>Offer Price: ₹{s.offer_price}</span>
+                            ) : s.price !== undefined ? (
+                              <span>Price: ₹{s.price}</span>
+                            ) : null}
+                            {s.offer_price_per_minute_for_chat && (
+                              <div>
+                                Offer Per Minute (chat): ₹
+                                {s.offer_price_per_minute_for_chat}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="mt-2 md:mt-0 text-right">
+                          <div>
+                            <Tag color={s.isEnabled ? "green" : "red"}>
+                              {s.isEnabled ? "Enabled" : "Disabled"}
+                            </Tag>
+                          </div>
+                          {s.session_durations &&
+                            s.session_durations.length > 0 && (
+                              <div className="text-sm text-gray-600 mt-1">
+                                Durations: {s.session_durations.join(" / ")}{" "}
+                                mins
+                              </div>
+                            )}
+                        </div>
+                      </div>
+                    </Card>
+                  ))}
+                </div>
+              ) : (
+                <Text type="secondary">No services available</Text>
               )}
             </Card>
           </Col>

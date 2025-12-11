@@ -20,6 +20,8 @@ import {
 import { SaveOutlined, ArrowLeftOutlined } from "@ant-design/icons";
 import moment from "moment";
 import toast from "react-hot-toast";
+import useGetQuery from "@/hooks/getQuery.hook";
+import { apiUrls } from "@/apis";
 
 const { Option } = Select;
 const { TextArea } = Input;
@@ -34,20 +36,8 @@ const UserEditForm = ({
 }) => {
   const [form] = Form.useForm();
   const [formData, setFormData] = useState({});
-
-  // Category options for lawyers/clerks
-  const categoryOptions = [
-    { label: "Criminal Law", value: "criminal_law" },
-    { label: "Civil Law", value: "civil_law" },
-    { label: "Family Law", value: "family_law" },
-    { label: "Corporate Law", value: "corporate_law" },
-    { label: "Property Law", value: "property_law" },
-    { label: "Labor Law", value: "labor_law" },
-    { label: "Tax Law", value: "tax_law" },
-    { label: "Immigration Law", value: "immigration_law" },
-    { label: "Consumer Law", value: "consumer_law" },
-    { label: "Environmental Law", value: "environmental_law" },
-  ];
+  const [categories, setCategories] = useState([]);
+  const { getQuery } = useGetQuery();
 
   // Language options
   const languageOptions = [
@@ -67,6 +57,13 @@ const UserEditForm = ({
 
   useEffect(() => {
     if (userData) {
+      // Normalize category values: backend may return array of objects or strings
+      const normalizedCategories = Array.isArray(userData.category)
+        ? userData.category.map((c) =>
+            typeof c === "string" ? c : c._id || c.category
+          )
+        : [];
+
       const initialData = {
         // Basic Information
         fullName: userData.fullName || "",
@@ -78,7 +75,7 @@ const UserEditForm = ({
         gender: userData.gender || "",
 
         // Professional Information
-        category: userData.category || [],
+        category: normalizedCategories,
         languages: userData.languages || [],
 
         // Business Information (mainly for lawyers)
@@ -113,6 +110,41 @@ const UserEditForm = ({
       form.setFieldsValue(initialData);
     }
   }, [userData, form]);
+
+  // Fetch categories on component mount
+  useEffect(() => {
+    const fetchCategories = async () => {
+      getQuery({
+        url: apiUrls.categories.getAllCategories,
+        onSuccess: (response) => {
+          // API returns array of objects with _id and category name
+          const mappedCategories =
+            response.data.categories?.map((cat) => ({
+              label: cat.category,
+              value: cat._id,
+            })) || [];
+          setCategories(mappedCategories);
+
+          // Update form category field to map names to IDs for proper preselection
+          if (userData && Array.isArray(userData.category)) {
+            const mappedCategoryIds = userData.category.map((catValue) => {
+              // catValue is an object like {_id: "...", category: "Family Lawyer"}
+              // We want to extract the _id
+              return catValue._id;
+            });
+            console.log("Setting form category values to:", mappedCategoryIds);
+            form.setFieldsValue({ category: mappedCategoryIds });
+          }
+        },
+        onFail: (err) => {
+          console.error("Failed to fetch categories:", err);
+          toast.error("Failed to load categories");
+        },
+      });
+    };
+
+    fetchCategories();
+  }, [userData, form]); // Include userData and form in dependencies
 
   const handleFinish = (values) => {
     // Convert time values to string format
@@ -275,7 +307,7 @@ const UserEditForm = ({
                 mode="multiple"
                 placeholder="Select categories"
                 size="large"
-                options={categoryOptions}
+                options={categories}
                 allowClear
               />
             </Form.Item>

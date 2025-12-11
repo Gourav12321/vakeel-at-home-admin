@@ -1,5 +1,5 @@
 // export const apiBaseUrl = "/api/v1"; // Use Next.js proxy instead of direct backend URL
-// export const apiBaseUrl = "http://localhost:5970/api/v1"; // Direct backend URL (causes CORS)
+// export const apiBaseUrl = "http://localhost:5970/api/v1";
 export const apiBaseUrl = "https://13-60-62-223.nip.io/api/v1";
 
 export const apiUrls = {
@@ -32,6 +32,10 @@ export const apiUrls = {
     getComments: "/posts",
     hideComments: "posts/id/hide/id",
     hidePost: "posts/id/hide",
+    // Base path for restrictions. POST to `/restrictions/:userId` to create a restriction.
+    restrictUser: "/restrictions",
+    // DELETE `/restrictions/:id` can be used to remove a restriction
+    deleteRestriction: "/restrictions/id",
   },
   blogs: {
     getAllBlogs: "/blogs/admin",

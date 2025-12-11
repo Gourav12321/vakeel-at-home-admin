@@ -4,6 +4,7 @@ import moment from "moment";
 import Title from "@/components/Title/Title";
 import useGetQuery from "@/hooks/getQuery.hook";
 import usePutQuery from "@/hooks/putQuery.hook";
+import usePostQuery from "@/hooks/postQuery.hook";
 import Loader from "@/components/Loader/Loader";
 
 import {
@@ -15,6 +16,8 @@ import {
   Typography,
   Dropdown,
   Modal,
+  DatePicker,
+  Input,
 } from "antd";
 import {
   UserOutlined,
@@ -24,10 +27,14 @@ import {
   MoreOutlined,
   EyeInvisibleOutlined,
   EyeOutlined,
+  LockOutlined,
 } from "@ant-design/icons";
 import { apiUrls } from "@/apis";
+import apiClient from "@/apis/apiClient";
+import toast from "react-hot-toast";
 import { useEffect, useState } from "react";
 import { useSearchParams, usePathname, useRouter } from "next/navigation";
+import RestrictionModal from "@/components/RestrictionModal/RestrictionModal";
 
 const { Text, Paragraph } = Typography;
 
@@ -100,7 +107,13 @@ const ConfirmationModal = ({
 };
 
 // Component to render nested replies
-const ReplyComponent = ({ reply, level = 0, parentCommentId, onShowModal }) => {
+const ReplyComponent = ({
+  reply,
+  level = 0,
+  parentCommentId,
+  onShowModal,
+  resolveAuthor,
+}) => {
   const isHidden = reply.hide;
   const maxLevel = 3; // Maximum nesting level to prevent infinite recursion
   const { putQuery, loading: hideLoading } = usePutQuery();
@@ -108,6 +121,13 @@ const ReplyComponent = ({ reply, level = 0, parentCommentId, onShowModal }) => {
   if (level > maxLevel) {
     return null;
   }
+
+  // resolve author object early so avatar, restriction and menu use the same data
+  const resolvedAuthor = resolveAuthor
+    ? resolveAuthor(reply.author)
+    : reply.author && typeof reply.author === "object"
+    ? reply.author
+    : null;
 
   // Note: These functions are no longer needed since we refresh data from server
   // const handleHideToggle = (replyId, currentHideStatus) => { ... };
@@ -140,7 +160,8 @@ const ReplyComponent = ({ reply, level = 0, parentCommentId, onShowModal }) => {
         >
           <Avatar
             size="default"
-            icon={<UserOutlined />}
+            src={resolvedAuthor?.profilePic}
+            icon={!resolvedAuthor?.profilePic ? <UserOutlined /> : null}
             style={{
               flexShrink: 0,
               backgroundColor: "#dbeafe",
@@ -157,10 +178,45 @@ const ReplyComponent = ({ reply, level = 0, parentCommentId, onShowModal }) => {
               }}
             >
               <Text strong style={{ fontSize: "14px", color: "#1f2937" }}>
-                {reply.author && typeof reply.author === "object"
-                  ? reply.author.fullName
+                {resolvedAuthor
+                  ? resolvedAuthor.fullName
+                  : reply.author && typeof reply.author === "string"
+                  ? reply.author
                   : "Unknown User"}
               </Text>
+
+              {resolvedAuthor &&
+                resolvedAuthor.restrictions &&
+                resolvedAuthor.restrictions.length > 0 &&
+                resolvedAuthor.restrictions[0].active && (
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 8,
+                      marginLeft: 8,
+                    }}
+                  >
+                    <Tag color="orange" size="small">
+                      Restricted
+                    </Tag>
+                    <Text type="secondary" style={{ fontSize: "12px" }}>
+                      {resolvedAuthor.restrictions[0].reason || "No reason"} •{" "}
+                      {resolvedAuthor.restrictions[0].start
+                        ? moment(resolvedAuthor.restrictions[0].start).format(
+                            "MMM DD, h:mm A"
+                          )
+                        : ""}{" "}
+                      -{" "}
+                      {resolvedAuthor.restrictions[0].end
+                        ? moment(resolvedAuthor.restrictions[0].end).format(
+                            "MMM DD, h:mm A"
+                          )
+                        : ""}
+                    </Text>
+                  </div>
+                )}
+
               <Text type="secondary" style={{ fontSize: "12px" }}>
                 {reply.createdAt
                   ? moment(reply.createdAt).format("MMM DD, h:mm A")
@@ -207,9 +263,85 @@ const ReplyComponent = ({ reply, level = 0, parentCommentId, onShowModal }) => {
                               text: reply.text || "No comment",
                               isHidden: isHidden,
                               parentCommentId: parentCommentId,
+                              userId:
+                                reply.author && typeof reply.author === "object"
+                                  ? reply.author._id
+                                  : reply.author,
                             });
                         },
                       },
+
+                      (function () {
+                        const restrictionObj =
+                          resolvedAuthor &&
+                          (resolvedAuthor.restriction ||
+                            (Array.isArray(resolvedAuthor.restrictions) &&
+                            resolvedAuthor.restrictions.length > 0
+                              ? resolvedAuthor.restrictions[0]
+                              : null));
+                        const isRestricted = !!(
+                          restrictionObj && restrictionObj.active
+                        );
+                        return {
+                          key: "restrict",
+                          label: isRestricted
+                            ? "Unrestrict User"
+                            : "Restrict User",
+                          icon: <LockOutlined />,
+                          onClick: async () => {
+                            if (isRestricted) {
+                              const restrictionId =
+                                restrictionObj?._id ||
+                                restrictionObj?.id ||
+                                null;
+                              const userId =
+                                resolvedAuthor?._id ||
+                                resolvedAuthor?.id ||
+                                (reply.author &&
+                                typeof reply.author === "string"
+                                  ? reply.author
+                                  : null);
+
+                              if (!userId || !restrictionId) {
+                                toast.error(
+                                  "Unable to unrestrict: missing restriction id for user"
+                                );
+                                return;
+                              }
+
+                              try {
+                                await apiClient.delete(
+                                  `/restrictions/${userId}/${restrictionId}`
+                                );
+                                toast.success("User unrestricted");
+                                window.dispatchEvent(
+                                  new Event("vahgram:refresh")
+                                );
+                              } catch (err) {
+                                console.error(err);
+                                toast.error("Failed to unrestrict user");
+                              }
+                            } else {
+                              onShowModal &&
+                                onShowModal({
+                                  type: "restrict",
+                                  id: reply._id,
+                                  author: resolvedAuthor
+                                    ? resolvedAuthor.fullName
+                                    : "Unknown User",
+                                  email: resolvedAuthor
+                                    ? resolvedAuthor.email
+                                    : "No email",
+                                  text: reply.text || "No comment",
+                                  parentCommentId: parentCommentId,
+                                  userId: resolvedAuthor
+                                    ? resolvedAuthor._id
+                                    : reply.author,
+                                });
+                            }
+                          },
+                        };
+                      })(),
                     ],
                   }}
                   trigger={["click"]}
@@ -259,6 +391,7 @@ const ReplyComponent = ({ reply, level = 0, parentCommentId, onShowModal }) => {
               level={level + 1}
               parentCommentId={parentCommentId}
               onShowModal={onShowModal}
+              resolveAuthor={resolveAuthor}
             />
           ))}
         </div>
@@ -268,7 +401,7 @@ const ReplyComponent = ({ reply, level = 0, parentCommentId, onShowModal }) => {
 };
 
 // Component to render main post
-const PostCard = ({ post, onShowModal }) => {
+const PostCard = ({ post, onShowModal, resolveAuthor }) => {
   const { putQuery, loading: hideLoading } = usePutQuery();
 
   // Note: These functions are no longer needed since we refresh data from server
@@ -318,12 +451,66 @@ const PostCard = ({ post, onShowModal }) => {
               flexWrap: "wrap",
             }}
           >
-            <Text strong style={{ fontSize: "18px", color: "#1f2937" }}>
-              {post.author?.fullName || "Unknown User"}
-            </Text>
-            <Text type="secondary" style={{ fontSize: "14px" }}>
-              {post.author?.email || "No email"}
-            </Text>
+            {(() => {
+              const authorObj = resolveAuthor
+                ? resolveAuthor(post.author)
+                : post.author && typeof post.author === "object"
+                ? post.author
+                : null;
+              const name = authorObj
+                ? authorObj.fullName
+                : post.author && typeof post.author === "string"
+                ? post.author
+                : "Unknown User";
+              const email = authorObj
+                ? authorObj.email
+                : post.author?.email || "No email";
+
+              // prefer singular `restriction`, fallback to first element of `restrictions` array
+              const restriction =
+                authorObj &&
+                (authorObj.restriction ||
+                  (Array.isArray(authorObj.restrictions) &&
+                  authorObj.restrictions.length > 0
+                    ? authorObj.restrictions[0]
+                    : null));
+
+              return (
+                <>
+                  <Text strong style={{ fontSize: "18px", color: "#1f2937" }}>
+                    {name}
+                  </Text>
+                  <Text type="secondary" style={{ fontSize: "14px" }}>
+                    {email}
+                  </Text>
+
+                  {restriction && restriction.active && (
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 8,
+                        marginLeft: 8,
+                      }}
+                    >
+                      <Tag color="orange" size="small">
+                        Restricted
+                      </Tag>
+                      <Text type="secondary" style={{ fontSize: "12px" }}>
+                        {restriction.reason || "No reason"} •{" "}
+                        {restriction.start
+                          ? moment(restriction.start).format("MMM DD, h:mm A")
+                          : ""}{" "}
+                        -{" "}
+                        {restriction.end
+                          ? moment(restriction.end).format("MMM DD, h:mm A")
+                          : ""}
+                      </Text>
+                    </div>
+                  )}
+                </>
+              );
+            })()}
             <div
               style={{
                 marginLeft: "auto",
@@ -358,18 +545,109 @@ const PostCard = ({ post, onShowModal }) => {
                           "Dropdown clicked for main post:",
                           post._id
                         );
+                        const authorObj = resolveAuthor
+                          ? resolveAuthor(post.author)
+                          : post.author && typeof post.author === "object"
+                          ? post.author
+                          : null;
                         onShowModal &&
                           onShowModal({
                             type: "mainPost",
                             id: post._id,
-                            author: post.author?.fullName || "Unknown User",
-                            email: post.author?.email || "No email",
+                            author: authorObj
+                              ? authorObj.fullName
+                              : post.author?.fullName || "Unknown User",
+                            email: authorObj
+                              ? authorObj.email
+                              : post.author?.email || "No email",
                             text: post.description || "No content",
                             title: post.title || "No title",
                             isHidden: isMainPostHidden,
+                            userId: authorObj
+                              ? authorObj._id || authorObj.id
+                              : post.author && typeof post.author === "object"
+                              ? post.author._id
+                              : post.author,
                           });
                       },
                     },
+
+                    (function () {
+                      const authorObj = resolveAuthor
+                        ? resolveAuthor(post.author)
+                        : post.author && typeof post.author === "object"
+                        ? post.author
+                        : null;
+                      const restrictionObj =
+                        authorObj &&
+                        (authorObj.restriction ||
+                          (Array.isArray(authorObj.restrictions) &&
+                          authorObj.restrictions.length > 0
+                            ? authorObj.restrictions[0]
+                            : null));
+                      const isRestricted = !!(
+                        restrictionObj && restrictionObj.active
+                      );
+                      return {
+                        key: "restrict",
+                        label: isRestricted
+                          ? "Unrestrict User"
+                          : "Restrict User",
+                        icon: <LockOutlined />,
+                        onClick: async () => {
+                          if (isRestricted) {
+                            const restrictionId =
+                              restrictionObj?._id || restrictionObj?.id || null;
+                            const userId =
+                              authorObj?._id ||
+                              authorObj?.id ||
+                              (post.author && typeof post.author === "string"
+                                ? post.author
+                                : null);
+
+                            if (!userId || !restrictionId) {
+                              toast.error(
+                                "Unable to unrestrict: missing restriction id for user"
+                              );
+                              return;
+                            }
+
+                            try {
+                              await apiClient.delete(
+                                `/restrictions/${userId}/${restrictionId}`
+                              );
+                              toast.success("User unrestricted");
+                              window.dispatchEvent(
+                                new Event("vahgram:refresh")
+                              );
+                            } catch (err) {
+                              console.error(err);
+                              toast.error("Failed to unrestrict user");
+                            }
+                          } else {
+                            onShowModal &&
+                              onShowModal({
+                                type: "restrict",
+                                id: post._id,
+                                author: authorObj
+                                  ? authorObj.fullName
+                                  : post.author?.fullName || "Unknown User",
+                                email: authorObj
+                                  ? authorObj.email
+                                  : post.author?.email || "No email",
+                                text: post.description || "No content",
+                                title: post.title || "No title",
+                                userId: authorObj
+                                  ? authorObj._id || authorObj.id
+                                  : post.author &&
+                                    typeof post.author === "object"
+                                  ? post.author._id
+                                  : post.author,
+                              });
+                          }
+                        },
+                      };
+                    })(),
                   ],
                 }}
                 trigger={["click"]}
@@ -489,6 +767,7 @@ const PostCard = ({ post, onShowModal }) => {
                       post.isRepost ? post.originalPost._id : post._id
                     }
                     onShowModal={onShowModal}
+                    resolveAuthor={resolveAuthor}
                   />
                 )
               )}
@@ -510,6 +789,7 @@ const VahGram = () => {
 
   const [postsData, setPostsData] = useState([]);
   const [totalDocuments, setTotalDocuments] = useState(0);
+  const [authorMap, setAuthorMap] = useState({});
   const [modalData, setModalData] = useState(null);
   const [modalLoading, setModalLoading] = useState(false);
 
@@ -584,6 +864,50 @@ const VahGram = () => {
 
         console.log("posts list", dataList);
         setPostsData(dataList);
+
+        // build an author map to allow resolving author objects by id
+        const map = {};
+        const collectAuthorsFromComment = (comment) => {
+          if (
+            comment &&
+            comment.author &&
+            typeof comment.author === "object" &&
+            comment.author._id
+          ) {
+            map[comment.author._id] = comment.author;
+          }
+          if (comment && comment.replies && Array.isArray(comment.replies)) {
+            comment.replies.forEach((r) => collectAuthorsFromComment(r));
+          }
+        };
+
+        dataList.forEach((post) => {
+          if (
+            post.author &&
+            typeof post.author === "object" &&
+            post.author._id
+          ) {
+            map[post.author._id] = post.author;
+          }
+          if (
+            post.isRepost &&
+            post.originalPost &&
+            post.originalPost.author &&
+            typeof post.originalPost.author === "object" &&
+            post.originalPost.author._id
+          ) {
+            map[post.originalPost.author._id] = post.originalPost.author;
+          }
+          const comments =
+            post.isRepost && post.originalPost
+              ? post.originalPost.comments
+              : post.comments;
+          if (comments && Array.isArray(comments)) {
+            comments.forEach((c) => collectAuthorsFromComment(c));
+          }
+        });
+
+        setAuthorMap(map);
       },
       onFail: (err) => {
         console.log(err);
@@ -591,8 +915,23 @@ const VahGram = () => {
     });
   };
 
+  // helper to resolve author: either object passed or lookup by id
+  const resolveAuthor = (author) => {
+    if (!author) return null;
+    if (typeof author === "object") return author;
+    if (typeof author === "string") return authorMap[author] || { _id: author };
+    return null;
+  };
+
   useEffect(() => {
     fetchData();
+  }, [page, limit]);
+
+  // listen for refresh events triggered after unrestrict
+  useEffect(() => {
+    const onRefresh = () => fetchData();
+    window.addEventListener("vahgram:refresh", onRefresh);
+    return () => window.removeEventListener("vahgram:refresh", onRefresh);
   }, [page, limit]);
 
   const handlePageChange = (newPage) => {
@@ -658,6 +997,7 @@ const VahGram = () => {
                   key={post._id || index}
                   post={post}
                   onShowModal={handleShowModal}
+                  resolveAuthor={resolveAuthor}
                 />
               ))}
             </div>
@@ -779,6 +1119,19 @@ const VahGram = () => {
         }
         confirmText={modalData ? `${modalData.isHidden ? "Show" : "Hide"}` : ""}
         loading={modalLoading}
+      />
+
+      {/* Restriction Modal */}
+      <RestrictionModal
+        visible={!!modalData && modalData.type === "restrict"}
+        onCancel={handleModalCancel}
+        userId={modalData ? modalData.userId : null}
+        authorName={modalData ? modalData.author : null}
+        onSuccess={(res) => {
+          // Refresh data and close modal on success
+          fetchData();
+          setModalData(null);
+        }}
       />
     </>
   );

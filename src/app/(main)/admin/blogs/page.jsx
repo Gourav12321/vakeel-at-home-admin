@@ -9,7 +9,7 @@ import useDeleteQuery from "@/hooks/deleteQuery.hook";
 import Loader from "@/components/Loader/Loader";
 import EnhancedTable from "@/components/Table/EnhancedTable";
 
-import { Select, Modal } from "antd";
+import { Select, Modal, Input } from "antd";
 import { apiUrls } from "@/apis";
 import { useEffect, useState } from "react";
 import { useSearchParams, usePathname, useRouter } from "next/navigation";
@@ -26,6 +26,9 @@ const Blogs = () => {
   const [tableData, setTableData] = useState([]);
   const [totalDocuments, setTotalDocuments] = useState(0);
   const [togglingId, setTogglingId] = useState(null);
+  const [rejectionModalVisible, setRejectionModalVisible] = useState(false);
+  const [rejectionReason, setRejectionReason] = useState("");
+  const [pendingToggleBlog, setPendingToggleBlog] = useState(null);
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
   const [blogToDelete, setBlogToDelete] = useState(null);
 
@@ -49,6 +52,7 @@ const Blogs = () => {
           date: moment(item?.createdAt).format("DD-MM-YYYY") || "N/A",
           updatedAt: item?.updatedAt,
           isVerified: item?.isVerified,
+          rejectionReason: item?.rejectionReason || "",
           _id: item?._id,
         }));
 
@@ -60,15 +64,22 @@ const Blogs = () => {
     });
   };
 
-  const handleToggleVerification = (blogId, currentStatus) => {
+  const handleToggleVerification = (blogId, currentStatus, reason = null) => {
     setTogglingId(blogId);
+    const putData = reason
+      ? { isVerified: false, rejectionReason: reason }
+      : { isVerified: !currentStatus };
+
     putQuery({
       url: `${apiUrls.blogs.verifyBlog.replace("/id", `/${blogId}`)}`,
+      putData,
       onSuccess: (response) => {
         toast.success("Blog verification status updated successfully");
         setTableData((prevData) =>
           prevData.map((item) =>
-            item._id === blogId ? { ...item, isVerified: !currentStatus } : item
+            item._id === blogId
+              ? { ...item, isVerified: putData.isVerified }
+              : item
           )
         );
         setTogglingId(null);
@@ -79,6 +90,28 @@ const Blogs = () => {
         setTogglingId(null);
       },
     });
+  };
+
+  const openRejectionModal = (blog) => {
+    setPendingToggleBlog(blog);
+    setRejectionReason("");
+    setRejectionModalVisible(true);
+  };
+
+  const handleConfirmRejection = () => {
+    if (!pendingToggleBlog) return;
+    handleToggleVerification(
+      pendingToggleBlog._id,
+      pendingToggleBlog.isVerified,
+      rejectionReason
+    );
+    setRejectionModalVisible(false);
+    setPendingToggleBlog(null);
+  };
+
+  const handleCancelRejection = () => {
+    setRejectionModalVisible(false);
+    setPendingToggleBlog(null);
   };
 
   const handleDeleteClick = (blog) => {
@@ -135,10 +168,27 @@ const Blogs = () => {
       accessor: "isVerified",
       width: 180,
       Cell: (value, record) => {
+        const currentValue =
+          value === true
+            ? "verified"
+            : value === false
+            ? "not_verified"
+            : "pending";
+
         return (
           <Select
-            value={value ? "verified" : "not_verified"}
+            value={currentValue}
             onChange={(newValue) => {
+              // If user chooses to reject, open modal to collect reason
+              if (newValue === "not_verified") {
+                openRejectionModal({ _id: record._id, isVerified: value });
+                return;
+              }
+
+              // Do nothing if pending option selected (read-only)
+              if (newValue === "pending") return;
+
+              // Approve directly
               handleToggleVerification(record._id, value);
             }}
             loading={togglingId === record._id}
@@ -147,19 +197,43 @@ const Blogs = () => {
             size="small"
             className="verification-status-select"
           >
+            {currentValue === "pending" && (
+              <Select.Option value="pending" disabled>
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
+                  <span>Pending</span>
+                </div>
+              </Select.Option>
+            )}
+
             <Select.Option value="not_verified">
               <div className="flex items-center gap-2">
                 <div className="w-2 h-2 bg-red-500 rounded-full"></div>
-                <span>Not Verified</span>
+                <span>Reject</span>
               </div>
             </Select.Option>
             <Select.Option value="verified">
               <div className="flex items-center gap-2">
                 <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                <span>Verified</span>
+                <span>Approved</span>
               </div>
             </Select.Option>
           </Select>
+        );
+      },
+    },
+    {
+      Header: "Rejection Reason",
+      accessor: "rejectionReason",
+      width: 250,
+      Cell: (value) => {
+        return (
+          <div
+            className="text-sm text-gray-700"
+            style={{ wordBreak: "break-word", whiteSpace: "normal" }}
+          >
+            {value ? value : <span className="text-gray-400">-</span>}
+          </div>
         );
       },
     },
@@ -216,6 +290,30 @@ const Blogs = () => {
           />
         </div>
       )}
+
+      {/* Rejection Reason Modal */}
+      <Modal
+        title="Rejection Reason"
+        open={rejectionModalVisible}
+        onOk={handleConfirmRejection}
+        onCancel={handleCancelRejection}
+        okButtonProps={{
+          disabled: !rejectionReason || rejectionReason.trim() === "",
+        }}
+        okText="Reject"
+      >
+        <div className="py-2">
+          <p className="text-sm text-gray-600 mb-2">
+            Please provide a reason for rejection:
+          </p>
+          <Input.TextArea
+            rows={4}
+            value={rejectionReason}
+            onChange={(e) => setRejectionReason(e.target.value)}
+            placeholder="Enter rejection reason"
+          />
+        </div>
+      </Modal>
 
       {/* Delete Confirmation Modal */}
       <Modal

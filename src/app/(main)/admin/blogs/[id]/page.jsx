@@ -8,7 +8,17 @@ import useGetQuery from "@/hooks/getQuery.hook";
 import usePutQuery from "@/hooks/putQuery.hook";
 import Loader from "@/components/Loader/Loader";
 
-import { Card, Button, Tag, Space, Typography, Image, Divider } from "antd";
+import {
+  Card,
+  Button,
+  Tag,
+  Space,
+  Typography,
+  Image,
+  Divider,
+  Modal,
+  Input,
+} from "antd";
 import {
   UserOutlined,
   CalendarOutlined,
@@ -22,7 +32,7 @@ import BackHeader from "@/components/BackHeader/BackHeader";
 
 const { Text, Paragraph, Title: AntTitle } = Typography;
 
-const BlogDetail = ({ params }) => {
+const BlogDetail = () => {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -32,8 +42,12 @@ const BlogDetail = ({ params }) => {
 
   const [blogData, setBlogData] = useState(null);
   const [toggling, setToggling] = useState(false);
+  const [rejectionModalVisible, setRejectionModalVisible] = useState(false);
+  const [rejectionReason, setRejectionReason] = useState("");
 
-  const blogId = params.id;
+  // Derive blogId from the current pathname to avoid accessing `params` Promise
+  // directly in a client component.
+  const blogId = pathname?.split("/").filter(Boolean).pop() ?? null;
 
   const fetchBlogData = () => {
     getQuery({
@@ -49,20 +63,74 @@ const BlogDetail = ({ params }) => {
   };
 
   const handleToggleVerification = () => {
+    // If currently approved, open modal to get rejection reason before rejecting
+    if (blogData?.isVerified) {
+      setRejectionModalVisible(true);
+      return;
+    }
+
+    // Otherwise approve directly
     setToggling(true);
     putQuery({
       url: `${apiUrls.blogs.verifyBlog.replace("/id", `/${blogId}`)}`,
+      putData: { isVerified: true },
       onSuccess: (response) => {
         toast.success("Blog verification status updated successfully");
         setBlogData((prev) => ({
           ...prev,
-          isVerified: !prev.isVerified,
+          isVerified: true,
         }));
         setToggling(false);
       },
       onFail: (err) => {
         console.log("Toggle failed:", err);
         toast.error("Failed to update verification status");
+        setToggling(false);
+      },
+    });
+  };
+
+  const handleConfirmRejection = () => {
+    setToggling(true);
+    putQuery({
+      url: `${apiUrls.blogs.verifyBlog.replace("/id", `/${blogId}`)}`,
+      putData: { isVerified: false, rejectionReason },
+      onSuccess: (response) => {
+        toast.success("Blog verification status updated successfully");
+        setBlogData((prev) => ({
+          ...prev,
+          isVerified: false,
+        }));
+        setToggling(false);
+        setRejectionModalVisible(false);
+        setRejectionReason("");
+      },
+      onFail: (err) => {
+        console.log("Toggle failed:", err);
+        toast.error("Failed to update verification status");
+        setToggling(false);
+      },
+    });
+  };
+
+  const handleCancelRejection = () => {
+    setRejectionModalVisible(false);
+    setRejectionReason("");
+  };
+
+  const handleApprove = () => {
+    setToggling(true);
+    putQuery({
+      url: `${apiUrls.blogs.verifyBlog.replace("/id", `/${blogId}`)}`,
+      putData: { isVerified: true },
+      onSuccess: (response) => {
+        toast.success("Blog approved successfully");
+        setBlogData((prev) => ({ ...prev, isVerified: true }));
+        setToggling(false);
+      },
+      onFail: (err) => {
+        console.log("Approve failed:", err);
+        toast.error("Failed to approve blog");
         setToggling(false);
       },
     });
@@ -114,7 +182,13 @@ const BlogDetail = ({ params }) => {
               <div className="mb-4">
                 <Space>
                   <Tag
-                    color={blogData.isVerified ? "green" : "red"}
+                    color={
+                      blogData.isVerified === true
+                        ? "green"
+                        : blogData.isVerified === false
+                        ? "red"
+                        : "gold"
+                    }
                     icon={
                       blogData.isVerified ? (
                         <CheckCircleOutlined />
@@ -123,7 +197,11 @@ const BlogDetail = ({ params }) => {
                       )
                     }
                   >
-                    {blogData.isVerified ? "Verified" : "Not Verified"}
+                    {blogData.isVerified === true
+                      ? "Approved"
+                      : blogData.isVerified === false
+                      ? "Rejected"
+                      : "Pending"}
                   </Tag>
                   <Text type="secondary">
                     <CalendarOutlined className="mr-1" />
@@ -132,9 +210,13 @@ const BlogDetail = ({ params }) => {
                 </Space>
               </div>
 
-              <Paragraph className="text-lg leading-relaxed">
-                {blogData.description}
-              </Paragraph>
+              {/* Render HTML description as formatted content.
+                  NOTE: using dangerouslySetInnerHTML — ensure the HTML is trusted
+                  or sanitize it on the server/API to avoid XSS risks. */}
+              <div
+                className="text-lg leading-relaxed"
+                dangerouslySetInnerHTML={{ __html: blogData.description || "" }}
+              />
             </div>
 
             {/* Images */}
@@ -184,17 +266,27 @@ const BlogDetail = ({ params }) => {
                 <Text strong>Verification Status</Text>
                 <div className="mt-2">
                   <Tag
-                    color={blogData.isVerified ? "green" : "red"}
+                    color={
+                      blogData.isVerified === true
+                        ? "green"
+                        : blogData.isVerified === false
+                        ? "red"
+                        : "gold"
+                    }
                     icon={
-                      blogData.isVerified ? (
+                      blogData.isVerified === true ? (
                         <CheckCircleOutlined />
-                      ) : (
+                      ) : blogData.isVerified === false ? (
                         <CloseCircleOutlined />
-                      )
+                      ) : null
                     }
                     className="text-sm"
                   >
-                    {blogData.isVerified ? "Verified" : "Not Verified"}
+                    {blogData.isVerified === true
+                      ? "Approved"
+                      : blogData.isVerified === false
+                      ? "Rejected"
+                      : "Pending"}
                   </Tag>
                 </div>
               </div>
@@ -214,32 +306,109 @@ const BlogDetail = ({ params }) => {
                   {moment(blogData.updatedAt).format("MMM DD, YYYY h:mm A")}
                 </div>
               </div>
+
+              <Divider />
+
+              <div>
+                <Text strong>Rejection Reason</Text>
+                <div className="mt-2 text-sm text-gray-600">
+                  {blogData.rejectionReason &&
+                  blogData.rejectionReason.trim() !== "" ? (
+                    <div
+                      style={{
+                        whiteSpace: "pre-wrap",
+                        wordBreak: "break-word",
+                      }}
+                    >
+                      {blogData.rejectionReason}
+                    </div>
+                  ) : (
+                    <span className="text-gray-400">-</span>
+                  )}
+                </div>
+              </div>
             </div>
           </Card>
 
           <Card title="Actions">
             <div className="space-y-3">
-              <Button
-                type={blogData.isVerified ? "default" : "primary"}
-                danger={blogData.isVerified}
-                icon={
-                  blogData.isVerified ? (
-                    <CloseCircleOutlined />
-                  ) : (
-                    <CheckCircleOutlined />
-                  )
-                }
-                onClick={handleToggleVerification}
-                loading={toggling}
-                disabled={toggling}
-                block
-              >
-                {blogData.isVerified
-                  ? "Mark as Not Verified"
-                  : "Mark as Verified"}
-              </Button>
+              {blogData.isVerified === true ? (
+                // Approved -> allow reject (open modal)
+                <Button
+                  type="default"
+                  danger
+                  icon={<CloseCircleOutlined />}
+                  onClick={() => setRejectionModalVisible(true)}
+                  loading={toggling}
+                  disabled={toggling}
+                  block
+                >
+                  Mark as Not Approved
+                </Button>
+              ) : blogData.isVerified === false ? (
+                // Rejected -> allow approve
+                <Button
+                  type="primary"
+                  icon={<CheckCircleOutlined />}
+                  onClick={handleApprove}
+                  loading={toggling}
+                  disabled={toggling}
+                  block
+                >
+                  Mark as Approved
+                </Button>
+              ) : (
+                // Pending -> show Approve and Reject buttons
+                <div className="flex gap-2">
+                  <Button
+                    type="primary"
+                    icon={<CheckCircleOutlined />}
+                    onClick={handleApprove}
+                    loading={toggling}
+                    disabled={toggling}
+                    className="flex-1"
+                  >
+                    Approve
+                  </Button>
+                  <Button
+                    type="default"
+                    danger
+                    icon={<CloseCircleOutlined />}
+                    onClick={() => setRejectionModalVisible(true)}
+                    loading={toggling}
+                    disabled={toggling}
+                    className="flex-1"
+                  >
+                    Reject
+                  </Button>
+                </div>
+              )}
             </div>
           </Card>
+
+          {/* Rejection Reason Modal for detail page */}
+          <Modal
+            title="Rejection Reason"
+            open={rejectionModalVisible}
+            onOk={handleConfirmRejection}
+            onCancel={handleCancelRejection}
+            okButtonProps={{
+              disabled: !rejectionReason || rejectionReason.trim() === "",
+            }}
+            okText="Reject"
+          >
+            <div className="py-2">
+              <p className="text-sm text-gray-600 mb-2">
+                Please provide a reason for rejection:
+              </p>
+              <Input.TextArea
+                rows={4}
+                value={rejectionReason}
+                onChange={(e) => setRejectionReason(e.target.value)}
+                placeholder="Enter rejection reason"
+              />
+            </div>
+          </Modal>
         </div>
       </div>
     </>
